@@ -5,7 +5,7 @@ int main(void) {
 	int buf_size = 4096;
 	char *buf;
 	size_t count;
-	while ((count = read(stdin, buf, buf_size)) != 0) {
-		fwrite(buf, 1, count, stdout);
+	while ((count = read(0, buf, buf_size)) > 0) {
+		write(1, buf, count);
 	}
 }
