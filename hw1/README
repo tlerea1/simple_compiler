@@ -1,0 +1,12 @@
+Tuvia Lerea
+tlerea1@jhu.edu
+
+I built the three cats in Python, JAVA, and C. JAVA was the easiest for me
+all I needed to do was find a lower level buffered stream class and then I
+was all set. Python took a bit of work and looking up since I am not too 
+familiar with the language. But I ended up getting it to work. C gave me
+the most trouble, but after changing the fd from stdin to 0 and stdout to 1
+everything seemed to work exactly as I expected it. perhaps stdin is defined
+as a FILE*. Just use standard javac to compile the JAVA program. I have
+included a makefile for the C program. The Python program is written for
+Python 2.7.
