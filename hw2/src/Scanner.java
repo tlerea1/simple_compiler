@@ -72,9 +72,9 @@ public class Scanner {
 		while (isWhiteSpace(c)) { // skip over leading whitespace
 			c = nextChar();
 		}
-		if (c =='/' && this.peak() == '*') {
+		if (c =='/' && this.peak() == '*') { // Starting a comment
 			tokenText += (char) c;
-			while(! isFullComment(tokenText)) {
+			while(! isFullComment(tokenText)) { // loop until comment is closed
 				c = nextChar();
 				if (c == -1) {
 					throw new ScannerException("Comment never closed");
@@ -82,7 +82,7 @@ public class Scanner {
 				tokenText += (char) c;
 			}
 			c = nextChar();
-			while (isWhiteSpace(c)) {
+			while (isWhiteSpace(c)) { // get rid of trailing whitespace
 				c = nextChar();
 			}
 			tokenText = "";

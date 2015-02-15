@@ -15,12 +15,10 @@ public class sc {
 	public static void main(String[] args) {
 		try {
 			if (args.length > 2) {
-				throw new RuntimeException("Too many arguments\n"
-						+ "Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
+				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
 			}
 			if (args.length == 0) {
-				throw new RuntimeException("Not enough arguments\n"
-						+ "Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
+				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
 			}
 			if (args.length == 1) { // Either an option and take from stdin, or a filename, run compiler
 				if (args[0].startsWith("-")) { // If option
@@ -31,6 +29,7 @@ public class sc {
 						fileDoesNotExistError(args[0]);
 					}
 					//TODO: compile input program
+					throw new RuntimeException("No option is not yet implemented"); // TODO remove later
 				}
 			} else { // If option and filename
 				File input = new File(args[1]);
