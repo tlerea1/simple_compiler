@@ -72,6 +72,21 @@ public class Scanner {
 		while (isWhiteSpace(c)) { // skip over leading whitespace
 			c = nextChar();
 		}
+		if (c =='/' && this.peak() == '*') {
+			tokenText += (char) c;
+			while(! isFullComment(tokenText)) {
+				c = nextChar();
+				if (c == -1) {
+					throw new ScannerException("Comment never closed");
+				}
+				tokenText += (char) c;
+			}
+			c = nextChar();
+			while (isWhiteSpace(c)) {
+				c = nextChar();
+			}
+			tokenText = "";
+		}
 		building.setStart(this.file_position); // start is after whitespace
 		if (c == -1) { // If stream is over return EOF
 			building.setType(TokenType.EOF);
@@ -114,6 +129,8 @@ public class Scanner {
 			building.setType(TokenType.SYMBOL); // Return type symbol
 			building.setEnd(this.file_position);
 			building.setText(tokenText);
+		} else {
+			throw new ScannerException("Invalid symbol found at position: " + this.file_position);
 		}
 		
 		return building;
@@ -164,8 +181,12 @@ public class Scanner {
 		return this.buf.charAt(this.buf_pos);
 	}
 	
+	private boolean isFullComment(String s) {
+		return s.startsWith("/*") && s.endsWith("*/");
+	}
+	
 	private boolean isWhiteSpace(int c) {
-		return c == ' ' || c == '\n' || c == '\t';
+		return c == ' ' || c == '\n' || c == '\t' || c == '\f' || c == '\r';
 	}
 	
 	private boolean isDigit(int c) {
