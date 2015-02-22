@@ -1,4 +1,8 @@
-
+/**
+ * Exception thrown by the SC Parser. 
+ * @author tuvialerea
+ *
+ */
 public class ParserException extends RuntimeException {
 
 	/**

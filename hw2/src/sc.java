@@ -14,15 +14,15 @@ public class sc {
 	 */
 	public static void main(String[] args) {
 		try {
-			if (args.length > 2) {
-				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
+			if (args.length > 3) {
+				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]");
 			}
 			if (args.length == 0) {
-				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [filename]");
+				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]");
 			}
 			if (args.length == 1) { // Either an option and take from stdin, or a filename, run compiler
 				if (args[0].startsWith("-")) { // If option
-					parseOption(args[0], null);
+					parseOption(args[0], null, false);
 				} else { // Get filename
 					File input = new File(args[0]);
 					if (! input.exists()) {
@@ -31,12 +31,28 @@ public class sc {
 					//TODO: compile input program
 					throw new RuntimeException("No option is not yet implemented"); // TODO remove later
 				}
-			} else { // If option and filename
-				File input = new File(args[1]);
-				if (! input.exists()) {
-					fileDoesNotExistError(args[1]);
+			} else if (args.length == 2){ // If option and filename
+				if (isOption(args[1])) {
+					if (args[1].equals("-g")) {
+						parseOption(args[0], null, true);
+					}
+				} else {
+					File input = new File(args[1]);
+					if (! input.exists()) {
+						fileDoesNotExistError(args[1]);
+					}
+					parseOption(args[0], args[1], false);
 				}
-				parseOption(args[0], args[1]);
+			} else {
+				File input = new File(args[2]);
+				if (! input.exists()) {
+					fileDoesNotExistError(args[2]);
+				}
+				if (args[1].equals("-g")) {
+					parseOption(args[0], args[2], true);
+				} else {
+					throw new RuntimeException("unrecognized option " + args[1]);
+				}
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
@@ -57,9 +73,12 @@ public class sc {
 	 * @param filename the filename to get source code from, if null use stdin.
 	 * @throws IOException If IO with file / stdin fails
 	 */
-	private static void parseOption(String option, String filename) throws IOException {
+	private static void parseOption(String option, String filename, boolean graphical) throws IOException {
 		if (! option.startsWith("-") || option.length() != 2) { // sanity check of option
 			throw new RuntimeException("invalid option");
+		}
+		if (graphical && option.charAt(1) != 'c') {
+			throw new RuntimeException("cannot use -g without -c");
 		}
 		switch(option.charAt(1)) {
 			case 's': // if -s
@@ -75,6 +94,17 @@ public class sc {
 				}
 				break;
 			case 'c': // -c
+				Scanner s;
+				if (filename == null) {
+					sc = new Scanner();
+				} else {
+					sc = new Scanner(filename);
+				}
+				Parser p = new Parser(sc, graphical);
+				p.parse();
+				System.out.println(p);
+				break;
+				
 			case 't': // -t
 			case 'a': // -a
 			case 'i': // -i
@@ -82,5 +112,9 @@ public class sc {
 			default:
 				throw new RuntimeException("invalid option"); // Not a preset option
 		}
+	}
+	
+	private static boolean isOption(String s) {
+		return s.startsWith("-");
 	}
 }

@@ -1,0 +1,3 @@
+PROGRAM a;
+CONST; VAR TYPE
+END a.

@@ -1,9 +1,18 @@
 
 public class BasicObserver implements Observer {
 
+	/**
+	 * The indent level. Represents the depth of the stack.
+	 */
 	private String indent;
+	/**
+	 * The observer string that gets built.
+	 */
 	private String data;
 	
+	/**
+	 * Create a new Basic Observer.
+	 */
 	public BasicObserver() {
 		this.indent = "";
 		this.data = "";
@@ -28,10 +37,15 @@ public class BasicObserver implements Observer {
 		this.data += this.indent + item + "\n";
 	}
 	
+	@Override
 	public void add(Token item) {
 		this.data += this.indent + item + "\n";
 	}
 	
+	/**
+	 * Observer toString.
+	 * @return A string representation of the Observer.
+	 */
 	public String toString() {
 		return this.data;
 	}

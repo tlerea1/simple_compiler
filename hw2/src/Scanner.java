@@ -91,6 +91,7 @@ public class Scanner {
 		if (c == -1) { // If stream is over return EOF
 			building.setType(TokenType.EOF);
 			building.setEnd(this.file_position);
+			building.setText("");
 			return building;
 		}
 		if (isDigit(c)) { 

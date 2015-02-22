@@ -2,7 +2,23 @@ Tuvia Lerea
 tlerea1@jhu.edu
 
 make will compile sc
-to run: java sc -s
+to run: ./sc
+
+HW3:
+
+I have built the initial part of the parser for this assignment.
+I used the recursive decent process described in lecture. If a 
+failure is encountered a ParserException is thrown. The parser
+calls all() from the scanner and then uses the list of tokens
+to peak when needed and advance through the tokens when needed.
+The parser also uses the observer sceme. An observer as defined
+by the interface has three functions, decend, accend, and add. 
+decend and accend essentially allow the observer to maintain a
+stack trace. Add adds a new thing to the observer. The add function
+is overloaded the String param is for non-terminals, while the Token
+param is for the terminals. 
+
+HW 2:
 
 I have built the scanner and main driver the the SIMPLE compiler.
 The scanner has two levels. The low level file reading, and the
