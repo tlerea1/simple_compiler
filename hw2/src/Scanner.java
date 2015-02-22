@@ -2,8 +2,8 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * The SIMPLE compiler Scanner class. Used to scan the source code.
@@ -72,7 +72,7 @@ public class Scanner {
 		while (isWhiteSpace(c)) { // skip over leading whitespace
 			c = nextChar();
 		}
-		if (c =='/' && this.peak() == '*') { // Starting a comment
+		while (c =='/' && this.peak() == '*') { // Starting a comment
 			tokenText += (char) c;
 			while(! isFullComment(tokenText)) { // loop until comment is closed
 				c = nextChar();
@@ -140,11 +140,11 @@ public class Scanner {
 	 * Function for getting a collection of all the tokens in the stream. Ends with an EOF token.
 	 * @return the collection of all the tokens in the stream. 
 	 */
-	public Collection<Token> all() {
+	public List<Token> all() {
 		if (this.nextCalled) {
 			throw new ScannerException("all called after next");
 		}
-		Collection<Token> tokens = new ArrayList<Token>();
+		List<Token> tokens = new ArrayList<Token>();
 		Token returned;
 		do {
 			returned = this.next();
