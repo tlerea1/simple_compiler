@@ -103,7 +103,7 @@ public class Scanner {
 			building.setType(TokenType.NUMBER); // Return NUMBER token
 			building.setEnd(this.file_position);
 			building.setText(tokenText);
-			building.setVal(Integer.parseInt(tokenText));
+			building.setVal(java.lang.Integer.parseInt(tokenText));
 		} else if (isLetter(c)) {
 			tokenText += (char) c;
 			while (isDigit(this.peak()) || isLetter(this.peak())) { // Continue while Letters or digits

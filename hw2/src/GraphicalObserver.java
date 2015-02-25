@@ -8,7 +8,7 @@ import java.util.Stack;
 public class GraphicalObserver implements Observer {
 
 	private int currentLevel;
-	private Stack<Integer> levelStack; // Holds the Stack
+	private Stack<java.lang.Integer> levelStack; // Holds the Stack
 	private String data;
 	
 	/**
@@ -16,7 +16,7 @@ public class GraphicalObserver implements Observer {
 	 */
 	public GraphicalObserver() {
 		this.currentLevel = -1;
-		this.levelStack = new Stack<Integer>();
+		this.levelStack = new Stack<java.lang.Integer>();
 		this.data = "";
 		this.levelStack.push(0);
 	}

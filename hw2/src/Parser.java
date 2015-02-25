@@ -13,6 +13,7 @@ public class Parser {
 	private Observer obs;
 	private List<Token> tokens;
 	private int position;
+	private SymbolTable table;
 	
 	/**
 	 * Creates a new instance of the parser object.
@@ -28,6 +29,9 @@ public class Parser {
 		} else {
 			this.obs = new BasicObserver();
 		}
+		Scope universe = new Scope(null);
+		universe.insert("INTEGER", new TypeEntry(new Integer()));
+		this.table = new SymbolTable(universe);
 	}
 	
 	/**
