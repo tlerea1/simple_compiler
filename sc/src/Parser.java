@@ -17,6 +17,7 @@ public class Parser {
 	private int position;
 	private Scope current;
 	private Visitor visit;
+	private Integer singletonInt;
 	
 	/**
 	 * Creates a new instance of the parser object.
@@ -35,7 +36,8 @@ public class Parser {
 			this.visit = new PlainVisitor();
 		}
 		Scope universe = new Scope(null);
-		universe.insert("INTEGER", new Integer());
+		this.singletonInt = new Integer();
+		universe.insert("INTEGER", this.singletonInt);
 		this.current = new Scope(universe);
 	}
 	
@@ -107,17 +109,10 @@ public class Parser {
 	 * @param value the integer value
 	 */
 	private void addConstant(String identifier, int value) {
-		Entry integer = this.current.find("INTEGER");
-		if (integer instanceof Integer) { // Check for declaration of INTEGER
-			Constant temp = new Constant(value, (Integer) this.current.find("INTEGER"));
-
-			if (! this.current.local(identifier)) { // Check for already defined
-				this.current.insert(identifier, temp);
-			} else {
-				throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
-			}
+		if (! this.current.local(identifier)) { // Check for already defined
+			this.current.insert(identifier, new Constant(value, this.singletonInt));
 		} else {
-			throw new ParserException("INTEGER is not defined as a type Integer");
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
 		}
 	}
 	
