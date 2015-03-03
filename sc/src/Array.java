@@ -27,4 +27,8 @@ public class Array extends Type {
 	public String toString() {
 		return "ARRAY " + this.length + " OF " + this.elemType;
 	}
+
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

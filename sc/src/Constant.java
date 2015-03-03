@@ -27,4 +27,8 @@ public class Constant extends Entry {
 	public String toString() {
 		return "Constant:" + this.value;
 	}
+	
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

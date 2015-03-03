@@ -9,4 +9,12 @@ public class Record extends Type {
 	public String toString() {
 		return "RECORD";
 	}
+	
+	public Scope getScope() {
+		return this.scope;
+	}
+	
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

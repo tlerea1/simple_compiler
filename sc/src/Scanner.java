@@ -89,8 +89,9 @@ public class Scanner {
 		}
 		building.setStart(this.file_position); // start is after whitespace
 		if (c == -1) { // If stream is over return EOF
+			building.setStart(this.file_position+1);
 			building.setType(TokenType.EOF);
-			building.setEnd(this.file_position);
+			building.setEnd(this.file_position+1);
 			building.setText("");
 			return building;
 		}

@@ -1,4 +1,8 @@
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 
 public class Scope {
@@ -45,4 +49,28 @@ public class Scope {
 	public void setOuter(Scope outer) {
 		this.outer = outer;
 	}
+	
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
+	
+	/**
+	 * Function to get an ordered set of all entries in the scope. Sorted by key.
+	 * @return A SortedSet of all scope entries.
+	 */
+	public SortedSet<Map.Entry<String, Entry>> getEntries() {
+		SortedSet<Map.Entry<String, Entry>> set = 
+				new TreeSet<Map.Entry<String, Entry>>(new Comparator<Map.Entry<String, Entry>>() {
+
+			@Override
+			public int compare(java.util.Map.Entry<String, Entry> o1,
+					java.util.Map.Entry<String, Entry> o2) {
+				return o1.getKey().compareTo(o2.getKey());
+			}
+			
+		});
+		set.addAll(this.table.entrySet());
+		return set;
+	}
+	
 }

@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,7 +15,8 @@ public class Parser {
 	private Observer obs;
 	private List<Token> tokens;
 	private int position;
-	private SymbolTable table;
+	private Scope current;
+	private Visitor visit;
 	
 	/**
 	 * Creates a new instance of the parser object.
@@ -26,12 +29,14 @@ public class Parser {
 		this.position = 0;
 		if (graphical) {
 			this.obs = new GraphicalObserver();
+			this.visit = new GraphicalVisitor();
 		} else {
 			this.obs = new BasicObserver();
+			this.visit = new PlainVisitor();
 		}
 		Scope universe = new Scope(null);
-		universe.insert("INTEGER", new TypeEntry(new Integer()));
-		this.table = new SymbolTable(universe);
+		universe.insert("INTEGER", new Integer());
+		this.current = new Scope(universe);
 	}
 	
 	/**
@@ -58,23 +63,26 @@ public class Parser {
 	/**
 	 * Confirms that the next token is an Identifier.
 	 * If not, a ParserException is thrown.
+	 * @return The identifier
 	 */
-	private void matchIdent() {
+	private String matchIdent() {
 		Token next = this.next();
 		this.obs.add(next);
 		if (next.getType() != TokenType.IDENTIFIER) {
 			error("Failed to find identifier", next.getStart());
 		}
+		return next.getText();
 	}
 	
 	/**
 	 * Confirms the Program non-terminal.
 	 */
 	private void program() {
+		String startingIdentifier;
 		this.obs.add("Program");
 		this.obs.decend();
 		this.hardMatch("PROGRAM");
-		this.matchIdent();
+		startingIdentifier = this.matchIdent();
 		this.hardMatch(";");
 		this.declarations();
 		if (this.peak().getText().equals("BEGIN")) {
@@ -82,13 +90,61 @@ public class Parser {
 			this.instructions();
 		}
 		this.hardMatch("END");
-		this.matchIdent();
+		if (! this.matchIdent().equals(startingIdentifier)) {
+			throw new ParserException("PROGRAM identifier does not match terminating identifier");
+		}
 		this.hardMatch(".");
 		Token next = this.next();
 		if (next.getType() != TokenType.EOF) {
 			error("Expected EOF", next.getStart());
 		}
 		
+	}
+	
+	/**
+	 * Function to add new Constant to the current scope.
+	 * @param identifier the identifier
+	 * @param value the integer value
+	 */
+	private void addConstant(String identifier, int value) {
+		Entry integer = this.current.find("INTEGER");
+		if (integer instanceof Integer) {
+			Constant temp = new Constant(value, (Integer) this.current.find("INTEGER"));
+
+			if (! this.current.local(identifier)) {
+				this.current.insert(identifier, temp);
+			} else {
+				throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+			}
+		} else {
+			throw new ParserException("INTEGER is not defined as a type Integer");
+		}
+	}
+	
+	/**
+	 * Function to add new Variable to the current scope.
+	 * @param identifier the identifier
+	 * @param type the type
+	 */
+	private void addVariable(String identifier, Type type) {
+		if (! this.current.local(identifier)) {
+			this.current.insert(identifier, new Variable(type));
+		} else {
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+		}
+	}
+	
+	/**
+	 * Function to add Type to the current scope.
+	 * @param identifier the identifier
+	 * @param type the type
+	 */
+	private void addType(String identifier, Type type) {
+		if (! this.current.local(identifier)) {
+			this.current.insert(identifier, type);
+		} else {
+			throw new ParserException("Identifer <" + identifier + "> is already defined in current scope");
+		}
 	}
 	
 	/**
@@ -122,10 +178,12 @@ public class Parser {
 		Token next = this.next();
 		this.obs.add(next);
 		while (this.peak().getType() == TokenType.IDENTIFIER) {
-			this.matchIdent();
+			String identifier = this.matchIdent();
 			this.hardMatch("=");
 			this.expression();
+			int value = 5; // TODO: should be the return of expression
 			this.hardMatch(";");
+			addConstant(identifier, value);
 		}
 		this.obs.accend();
 	}
@@ -138,10 +196,13 @@ public class Parser {
 		this.obs.decend();
 		this.obs.add(this.next());
 		while (this.peak().getType() == TokenType.IDENTIFIER) {
-			this.identifierList();
+			Collection<String> identifiers = this.identifierList();
 			this.hardMatch(":");
-			this.type();
+			Type t = this.type();
 			this.hardMatch(";");
+			for (String s : identifiers) {
+				addVariable(s, t);
+			}
 		}
 		this.obs.accend();
 	}
@@ -154,10 +215,11 @@ public class Parser {
 		this.obs.decend();
 		this.obs.add(this.next());
 		while (this.peak().getType() == TokenType.IDENTIFIER) {
-			this.matchIdent();
+			String identifier = this.matchIdent();
 			this.hardMatch("=");
-			this.type();
+			Type t = this.type();
 			this.hardMatch(";");
+			addType(identifier, t);
 		}
 		this.obs.accend();
 	}
@@ -165,30 +227,51 @@ public class Parser {
 	/**
 	 * Confirms the Type Non-terminal.
 	 */
-	private void type() {
+	private Type type() {
 		this.obs.add("Type");
 		this.obs.decend();
 		Token next = this.peak();
+		Type toReturn = null;
 		if (next.getType() == TokenType.IDENTIFIER) {
-			this.obs.add(this.next());
+			int start = next.getStart();
+			String ident = matchIdent();
+			Entry temp = this.current.find(ident);
+			if (temp instanceof Type) {
+				toReturn = (Type) temp;
+			} else if (temp == null) { 
+				error("Type error identifer <" + ident + "> not yet defined", start);
+			} else {
+				error("Type error identifier <" + ident + "> not Type", start);
+			}
 		} else if (next.getText().equals("ARRAY")) {
 			this.hardMatch("ARRAY");
 			this.expression();
+			int len = 5; // TODO: should be return from expression
 			this.hardMatch("OF");
-			this.type();
+			Type t = this.type();
+			toReturn = new Array(len, t);
 		} else if (next.getText().equals("RECORD")) {
 			this.hardMatch("RECORD");
+			Scope scope = new Scope(this.current);
+			this.current = scope;
 			while (! this.peak().getText().equals("END")) {
-				this.identifierList();
+				Collection<String> identifiers = this.identifierList();
 				this.hardMatch(":");
-				this.type();
+				Type t = this.type();
 				this.hardMatch(";");
+				for (String s : identifiers) {
+					addVariable(s, t);
+				}
 			}
 			this.hardMatch("END");
+			this.current = scope.getOuter();
+			scope.setOuter(null);
+			toReturn = new Record(scope);
 		} else {
 			error("Type error, expected (identifier | \"ARRAY\" | \"RECORD\"", next.getStart());
 		}
 		this.obs.accend();
+		return toReturn;
 	}
 	
 	/**
@@ -427,15 +510,17 @@ public class Parser {
 	/**
 	 * Confirms the IdentifierList Non-terminal.
 	 */
-	private void identifierList() {
+	private Collection<String> identifierList() {
 		this.obs.add("IdentifierList");
 		this.obs.decend();
-		this.matchIdent();
+		Collection<String> identifiers = new ArrayList<String>();
+		identifiers.add(this.matchIdent());
 		while (this.peak().getText().equals(",")) {
 			this.hardMatch(",");
-			this.matchIdent();
+			identifiers.add(this.matchIdent());
 		}
 		this.obs.accend();
+		return identifiers;
 	}
 	
 	/**
@@ -459,8 +544,13 @@ public class Parser {
 	 * Returns the observer's string representation. 
 	 * @return the string representation
 	 */
-	public String toString() {
+	public String getParseTree() {
 		return this.obs.toString();
+	}
+	
+	public String getSymbolTable() {
+		this.current.accept(this.visit);
+		return this.visit.toString();
 	}
 	
 	/**

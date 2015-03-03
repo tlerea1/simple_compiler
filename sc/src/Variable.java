@@ -17,4 +17,8 @@ public class Variable extends Entry {
 	public String toString() {
 		return "Variable:" + this.type;
 	}
+	
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }
