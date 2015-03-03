@@ -1,3 +1,6 @@
 *.class
 cat
 *.tar.gz
+*.s
+*.dot
+*.out

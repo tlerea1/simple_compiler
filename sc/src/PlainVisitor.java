@@ -1,11 +1,15 @@
 import java.util.Map;
 import java.util.SortedSet;
 
-
+/**
+ * Class to store and build the basic symbol table representation.
+ * @author tuvialerea
+ *
+ */
 public class PlainVisitor implements Visitor {
 
-	private String indent;
-	private String data;
+	private String indent; // indent string
+	private String data; // String representation
 	
 	public PlainVisitor() {
 		this.indent = "";
@@ -91,11 +95,15 @@ public class PlainVisitor implements Visitor {
 	}
 	
 	private void indent() {
-		this.indent += "  ";
+		this.indent += "  "; // Adds two spaces to the indent string
 	}
 	
 	private void dedent() {
-		this.indent = this.indent.substring(0, this.indent.length() - 2);
+		if (this.indent.length() >= 2) {
+			this.indent = this.indent.substring(0, this.indent.length() - 2); // removes to spaces from the indent string
+		} else {
+			throw new ParserException("PlainVisitor Dedent fail!");
+		}
 	}
 	
 	public String toString() {

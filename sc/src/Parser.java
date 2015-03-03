@@ -108,10 +108,10 @@ public class Parser {
 	 */
 	private void addConstant(String identifier, int value) {
 		Entry integer = this.current.find("INTEGER");
-		if (integer instanceof Integer) {
+		if (integer instanceof Integer) { // Check for declaration of INTEGER
 			Constant temp = new Constant(value, (Integer) this.current.find("INTEGER"));
 
-			if (! this.current.local(identifier)) {
+			if (! this.current.local(identifier)) { // Check for already defined
 				this.current.insert(identifier, temp);
 			} else {
 				throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
@@ -127,7 +127,7 @@ public class Parser {
 	 * @param type the type
 	 */
 	private void addVariable(String identifier, Type type) {
-		if (! this.current.local(identifier)) {
+		if (! this.current.local(identifier)) { // Check for already defined
 			this.current.insert(identifier, new Variable(type));
 		} else {
 			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
@@ -140,7 +140,7 @@ public class Parser {
 	 * @param type the type
 	 */
 	private void addType(String identifier, Type type) {
-		if (! this.current.local(identifier)) {
+		if (! this.current.local(identifier)) { // Check for already defined
 			this.current.insert(identifier, type);
 		} else {
 			throw new ParserException("Identifer <" + identifier + "> is already defined in current scope");
@@ -236,11 +236,11 @@ public class Parser {
 			int start = next.getStart();
 			String ident = matchIdent();
 			Entry temp = this.current.find(ident);
-			if (temp instanceof Type) {
+			if (temp instanceof Type) { // Found the type!
 				toReturn = (Type) temp;
-			} else if (temp == null) { 
+			} else if (temp == null) { // Found no entry
 				error("Type error identifer <" + ident + "> not yet defined", start);
-			} else {
+			} else { // Found a non-type
 				error("Type error identifier <" + ident + "> not Type", start);
 			}
 		} else if (next.getText().equals("ARRAY")) {
@@ -265,7 +265,7 @@ public class Parser {
 			}
 			this.hardMatch("END");
 			this.current = scope.getOuter();
-			scope.setOuter(null);
+			scope.setOuter(null); // Detach from program scope
 			toReturn = new Record(scope);
 		} else {
 			error("Type error, expected (identifier | \"ARRAY\" | \"RECORD\"", next.getStart());

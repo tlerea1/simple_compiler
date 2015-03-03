@@ -4,6 +4,17 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW4:
+
+This assignment we added declaration handling and creation of
+the symbol table. This was achieved by modifing the already existing
+recursive decent functions to add values to the symbol table. 
+Additionally, a new interface and two implementing classes were added,
+visitors. They are in charge of generating the output for the
+symbol table, when the -t option is chosen. The Graphical Parser
+uses identityHashCodes to uniquely identify all objects, and
+maintains a set of all predefined Types as to not re-define them.
+
 HW3:
 
 I have built the initial part of the parser for this assignment.
@@ -32,4 +43,5 @@ token in the source code as well as the type and original source code
 text. The next function returns the next available token in the stream,
 while the all function returns all tokens from the stream. next will 
 return an EOF token when the end of the stream has been reached, while
-all simply returns a Collection<Token>.  
+all simply returns a Collection<Token>. 
+ 

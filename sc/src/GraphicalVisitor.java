@@ -2,11 +2,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.SortedSet;
 
-
+/**
+ * Class for GraphicalVisitor to create graphical DOT representation of the symbol table.
+ * @author tuvialerea
+ *
+ */
 public class GraphicalVisitor implements Visitor {
 
 	private String data;
-	private HashSet<java.lang.Integer> included;
+	private HashSet<java.lang.Integer> included; // Set of HashCodes of types already visited.
+												 // Not visiting the same types twice prevents duplicate arrows.
 	
 	public GraphicalVisitor() {
 		this.data = "";
