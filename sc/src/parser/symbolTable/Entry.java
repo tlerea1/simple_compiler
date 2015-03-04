@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 
 public abstract class Entry {
 	

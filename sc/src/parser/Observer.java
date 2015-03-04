@@ -1,3 +1,6 @@
+package parser;
+import scanner.Token;
+
 /**
  * Observer Interface for Parser.
  * @author tuvialerea

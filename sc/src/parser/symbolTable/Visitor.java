@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Visitor interface. Used to create representations of the symbol table.
  * @author tuvialerea

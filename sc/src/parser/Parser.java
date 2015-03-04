@@ -1,6 +1,22 @@
+package parser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import parser.symbolTable.Array;
+import parser.symbolTable.Constant;
+import parser.symbolTable.Entry;
+import parser.symbolTable.GraphicalVisitor;
+import parser.symbolTable.Integer;
+import parser.symbolTable.PlainVisitor;
+import parser.symbolTable.Record;
+import parser.symbolTable.Scope;
+import parser.symbolTable.Type;
+import parser.symbolTable.Variable;
+import parser.symbolTable.Visitor;
+import scanner.Scanner;
+import scanner.Token;
+import scanner.TokenType;
 
 /**
  * The SC Parser class.

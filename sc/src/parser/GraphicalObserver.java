@@ -1,4 +1,7 @@
+package parser;
 import java.util.Stack;
+
+import scanner.Token;
 
 /**
  * Observer to create a DOT file.

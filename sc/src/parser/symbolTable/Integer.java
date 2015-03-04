@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Class to represent the INTEGER type in SIMPLE. 
  * NOTE: This is a singleton class!!

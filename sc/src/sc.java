@@ -2,6 +2,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
+import parser.Parser;
+import scanner.Scanner;
+import scanner.Token;
+
 /**
  * SIMPLE compiler.
  * @author tuvialerea

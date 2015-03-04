@@ -1,3 +1,4 @@
+package scanner;
 
 /**
  * Exception class for the scanner to throw.

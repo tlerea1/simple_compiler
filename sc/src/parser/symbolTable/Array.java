@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Class to represent an ARRYA type in SIMPLE.
  * @author tuvialerea

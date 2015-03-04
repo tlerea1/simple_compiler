@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Class to represent a RECORD type for SIMPLE.
  * @author tuvialerea

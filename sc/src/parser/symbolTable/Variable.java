@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Class to represent a VAR in SIMPLE.
  * @author tuvialerea

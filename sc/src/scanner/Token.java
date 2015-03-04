@@ -1,3 +1,5 @@
+package scanner;
+
 /**
  * Class to represent a token. Holds starting and ending location of token.
  * Also stores the source text that makes up the token.

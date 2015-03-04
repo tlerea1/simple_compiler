@@ -1,5 +1,8 @@
+package parser.symbolTable;
 import java.util.Map;
 import java.util.SortedSet;
+
+import parser.ParserException;
 
 /**
  * Class to store and build the basic symbol table representation.

@@ -1,3 +1,4 @@
+package parser;
 /**
  * Exception thrown by the SC Parser. 
  * @author tuvialerea

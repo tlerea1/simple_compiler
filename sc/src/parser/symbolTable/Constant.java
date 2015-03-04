@@ -1,3 +1,5 @@
+package parser.symbolTable;
+
 /**
  * Class to represent a CONST in SIMPLE.
  * @author tuvialerea

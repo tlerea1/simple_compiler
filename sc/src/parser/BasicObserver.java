@@ -1,3 +1,6 @@
+package parser;
+import scanner.Token;
+
 
 public class BasicObserver implements Observer {
 
