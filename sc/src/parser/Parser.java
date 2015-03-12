@@ -3,6 +3,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import parser.ast.Assign;
+import parser.ast.Binary;
+import parser.ast.Expression;
+import parser.ast.Field;
+import parser.ast.Index;
+import parser.ast.Instruction;
+import parser.ast.Location;
+import parser.ast.Number;
 import parser.symbolTable.Array;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
@@ -34,6 +42,7 @@ public class Parser {
 	private Scope current;
 	private Visitor visit;
 	private Integer singletonInt;
+	private Instruction ast;
 	
 	/**
 	 * Creates a new instance of the parser object.
@@ -105,7 +114,7 @@ public class Parser {
 		this.declarations();
 		if (this.peak().getText().equals("BEGIN")) {
 			this.hardMatch("BEGIN");
-			this.instructions();
+			this.ast = this.instructions();
 		}
 		this.hardMatch("END");
 		if (! this.matchIdent().equals(startingIdentifier)) {
@@ -285,80 +294,116 @@ public class Parser {
 		return toReturn;
 	}
 	
+	private boolean isArithmeticable(Expression e) {
+		if (e instanceof Number) {
+			return true;
+		} else if (e instanceof Location) {
+			Type t = ((Location) e).getType();
+			return t instanceof Integer;
+		}
+		return false;
+	}
+	
 	/**
 	 * Confirms the Expression Non-terminal.
 	 */
-	private void expression() {
+	private Expression expression() {
 		this.obs.add("Expression");
 		this.obs.decend();
+		Expression toReturn;
 		if (this.peak().getText().equals("+") || this.peak().getText().equals("-")) {
+			Expression right = this.term();
+			if (isArithmeticable(right)) {
+				toReturn = new Binary(new Number(new Constant(1, this.singletonInt)), right, this.peak().getText());
+			} else {
+				throw new ParserException("expression: using arithmetic on non-integers");
+			}
 			this.obs.add(this.next());
+		} else {
+			toReturn = this.term();
 		}
-		this.term();
 		while (this.peak().getText().equals("+") || this.peak().getText().equals("-")) {
+			String op = this.peak().getText();
 			this.obs.add(this.next());
-			this.term();
+			Expression right = this.term();
+			if (isArithmeticable(toReturn) && isArithmeticable(right)) {
+				toReturn = new Binary(toReturn, right, op);
+			} else {
+				throw new ParserException("expression: using arithmetic on non-integers");
+			}
 		}
 		this.obs.accend();
+		return toReturn.fold();
 	}
 	
 	/**
 	 * Confirms the Term Non-terminal.
 	 */
-	private void term() {
+	private Expression term() {
 		this.obs.add("Term");
 		this.obs.decend();
-		this.factor();
+		Expression toReturn = this.factor();
 		while (this.peak().getText().equals("*") || this.peak().getText().equals("DIV") || this.peak().getText().equals("MOD")) {
+			Expression right = this.factor();
+			if (isArithmeticable(toReturn) && isArithmeticable(right)) {
+				toReturn = new parser.ast.Binary(toReturn, this.factor(), this.peak().getText());
+			} else {
+				throw new ParserException("term: using arithmetic on non-integers");
+			}
 			this.obs.add(this.next());
-			this.factor();
 		}
 		this.obs.accend();
+		return toReturn;
 	}
 	
 	/**
 	 * Confirms the Factor Non-terminal.
 	 */
-	private void factor() {
+	private Expression factor() {
 		this.obs.add("Factor");
 		this.obs.decend();
 		Token peak = this.peak();
+		Expression exp = null;
 		if (peak.getType() == TokenType.NUMBER) {
+			exp = new Number(new Constant(java.lang.Integer.parseInt(peak.getText()), this.singletonInt));
 			this.obs.add(this.next());
 		} else if (peak.getText().equals("(")) {
 			this.hardMatch("(");
-			this.expression();
+			exp = this.expression();
 			this.hardMatch(")");
 		} else if (peak.getType() == TokenType.IDENTIFIER) {
-			this.designator();
+			exp = this.designator();
 		} else {
 			error("Factor error", peak.getStart());
 		}
 		this.obs.accend();
+		return exp;
 	}
 	
 	/**
 	 * Confirms the Instructions Non-terminal.
 	 */
-	private void instructions() {
+	private Instruction instructions() {
 		this.obs.add("Instructions");
 		this.obs.decend();
-		this.instruction();
+		Instruction toReturn = this.instruction();
 		while (this.peak().getText().equals(";")) {
 			this.hardMatch(";");
-			this.instruction();
+			toReturn.setNext(this.instruction());
 		}
 		this.obs.accend();
+		return toReturn;
 	}
 	
 	/**
 	 * Confirms the Instruction Non-terminal.
 	 */
-	private void instruction() {
+	private Instruction instruction() {
+		Instruction toReturn = null;
 		this.obs.add("Instruction");
 		this.obs.decend();
 		if (this.peak().getType() == TokenType.IDENTIFIER) {
-			this.assign();
+			toReturn = this.assign();
 		} else if (this.peak().getText().equals("IF")) {
 			this.if1();
 		} else if (this.peak().getText().equals("REPEAT")) {
@@ -373,18 +418,25 @@ public class Parser {
 			error("Illegal Instruction", this.peak().getStart());
 		}
 		this.obs.accend();
+		return toReturn;
 	}
 	
 	/**
 	 * Confirms the Assign Non-terminal.
 	 */
-	private void assign() {
+	private Assign assign() {
+
 		this.obs.add("Assign");
 		this.obs.decend();
-		this.designator();
-		this.hardMatch(":=");
-		this.expression();
-		this.obs.accend();
+		Expression exp = this.designator();
+		if (exp instanceof Location) {
+			this.hardMatch(":=");
+			Expression e = this.expression();
+			this.obs.accend();
+			return new Assign(((Location) exp), e);
+		} else {
+			throw new ParserException("assign: assigning to constant");
+		}
 	}
 	
 	/**
@@ -477,45 +529,119 @@ public class Parser {
 	/**
 	 * Confirms the Designator Non-terminal.
 	 */
-	private void designator() {
+	private Expression designator() {
 		this.obs.add("Designator");
 		this.obs.decend();
-		this.matchIdent();
-		this.selector();
+		String ident = this.matchIdent();
+		Entry e = this.current.find(ident);
+		parser.symbolTable.Variable var;
+		Expression toReturn;
+		if (e instanceof parser.symbolTable.Variable) {
+			var = (parser.symbolTable.Variable) e;
+			parser.ast.Variable v = new parser.ast.Variable(var);
+			toReturn = this.selector(v);
+		} else if (e instanceof Constant) { 
+			this.selector(null);
+			Constant c = ((Constant) e);
+			toReturn = new Number(c);
+		} else {
+			throw new ParserException("Designator found refernce to type identifier");
+		}
+
 		this.obs.accend();
+		return toReturn;
 	}
 	
 	/**
 	 * Confirms the Selector Non-terminal.
 	 */
-	private void selector() {
+	private Location selector(parser.ast.Variable var) {
 		this.obs.add("Selector");
 		this.obs.decend();
+		Location current = var;
 		while (this.peak().getText().equals(".") || this.peak().getText().equals("[")) {
 			if (this.peak().getText().equals("[")) {
+				if (var == null) {
+					throw new ParserException("selector: indexing constant");
+				}
 				this.hardMatch("[");
-				this.expressionList();
+				Collection<parser.ast.Number> indecies = this.expressionList();
 				this.hardMatch("]");
+				for (parser.ast.Number i : indecies) {
+					Index inx = new Index(current, i);
+					inx.getType(); // Forces error checking
+					current = inx;
+				}
 			} else if (this.peak().getText().equals(".")) {
+				if (var == null) {
+					throw new ParserException("selector: accessing field of constant");
+				}
 				this.hardMatch(".");
-				this.matchIdent();
+				String ident = this.matchIdent();
+				Field f = checkRecord(current, ident);
+				current = f;
 			}
 		}
 		this.obs.accend();
+		return current;
+	}
+	
+//	private void checkArrayDimensions(Location currentVar, int num) {
+//		if (currentVar instanceof parser.ast.Variable) {
+//			parser.ast.Variable var = (parser.ast.Variable) currentVar;
+//			Type current = var.getVar().getType();
+//			for (int i=0;i<num;i++) {
+//				if (current instanceof Array) {
+//					current = ((Array) current).getElemType();
+//				} else {
+//					throw new ParserException("Indexing non-array");
+//				}
+//			}
+//		} else {
+//			throw new ParserException("Indexing non-variable");
+//		}
+//	}
+	
+	private Field checkRecord(Location loc, String ident) {
+		Type t = loc.getType();
+		
+		if (t instanceof Record) {
+			Entry e = ((Record) t).getScope().find(ident);
+			if (e != null && e instanceof parser.symbolTable.Variable) {
+				return new Field(loc, new parser.ast.Variable((parser.symbolTable.Variable) e));
+			} else {
+				throw new ParserException("Selector: Could not find field of given Record");
+			}
+		} else {
+			throw new ParserException("Selector: accessing field of non-Record");
+		}
+		
 	}
 	
 	/**
 	 * Confirms the ExpressionList Non-terminal.
 	 */
-	private void expressionList() {
+	private Collection<parser.ast.Number> expressionList() {
 		this.obs.add("ExpressionList");
 		this.obs.decend();
-		this.expression();
+		Collection<Number> expressions = new ArrayList<Number>();
+		Expression toAdd = this.expression();
+		if (toAdd instanceof Number) {
+			expressions.add((Number)toAdd);
+		} else {
+			throw new ParserException("expressionList: adding non-number");
+		}
 		while (this.peak().getText().equals(",")) {
 			this.hardMatch(",");
-			this.expression();
+			toAdd = this.expression();
+			if (toAdd instanceof Number) {
+				expressions.add((Number)toAdd);
+			} else {
+				throw new ParserException("expressionList: adding non-number");
+			}
 		}
 		this.obs.accend();
+		return expressions;
 	}
 	
 	/**
