@@ -76,4 +76,12 @@ public class Condition extends Node {
 	public Condition getOpposite() {
 		return new Condition(this.left, this.right, this.opposite(this.operator));
 	}
+	
+	/**
+	 * Function to accept the given visitor.
+	 * @param v the visitor to visit
+	 */
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

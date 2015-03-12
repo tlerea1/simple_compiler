@@ -21,4 +21,12 @@ public class Variable extends Location {
 	public Type getType() {
 		return var.getType();
 	}
+	
+	/**
+	 * Function to accept the given visitor.
+	 * @param v the visitor to visit
+	 */
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

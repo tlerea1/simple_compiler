@@ -24,4 +24,12 @@ public class Repeat extends Instruction {
 	public void setInstructions(Instruction instructions) {
 		this.instructions = instructions;
 	}
+	
+	/**
+	 * Function to accept the given visitor.
+	 * @param v the visitor to visit
+	 */
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }

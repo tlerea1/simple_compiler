@@ -5,12 +5,17 @@ import java.util.List;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
+import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
+import parser.ast.If;
 import parser.ast.Index;
 import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Number;
+import parser.ast.Read;
+import parser.ast.Repeat;
+import parser.ast.Write;
 import parser.symbolTable.Array;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
@@ -200,10 +205,14 @@ public class Parser {
 		while (this.peak().getType() == TokenType.IDENTIFIER) {
 			String identifier = this.matchIdent();
 			this.hardMatch("=");
-			this.expression();
-			int value = 5; // TODO: should be the return of expression
-			this.hardMatch(";");
-			addConstant(identifier, value);
+			Expression exp = this.expression();
+			if (exp instanceof Number) {
+				int value = ((Number) exp).getNum().getValue();
+				this.hardMatch(";");
+				addConstant(identifier, value);
+			} else {
+				throw new ParserException("constDecl: expression does not fold to number");
+			}
 		}
 		this.obs.accend();
 	}
@@ -265,11 +274,15 @@ public class Parser {
 			}
 		} else if (next.getText().equals("ARRAY")) {
 			this.hardMatch("ARRAY");
-			this.expression();
-			int len = 5; // TODO: should be return from expression
-			this.hardMatch("OF");
-			Type t = this.type();
-			toReturn = new Array(len, t);
+			Expression exp = this.expression();
+			if (exp instanceof Number) {
+				int len = ((Number) exp).getNum().getValue();
+				this.hardMatch("OF");
+				Type t = this.type();
+				toReturn = new Array(len, t);
+			} else {
+				throw new ParserException("arrayDecl: length does not evaluate to number");
+			}
 		} else if (next.getText().equals("RECORD")) {
 			this.hardMatch("RECORD");
 			Scope scope = new Scope(this.current);
@@ -442,28 +455,30 @@ public class Parser {
 	/**
 	 * Confirms the If Non-terminal.
 	 */
-	private void if1() {
+	private If if1() {
 		this.obs.add("If");
 		this.obs.decend();
 		this.hardMatch("IF");
-		this.condition();
+		Condition c = this.condition();
 		this.hardMatch("THEN");
-		this.instructions();
+		Instruction ifTrue = this.instructions();
+		Instruction ifFalse = null;
 		if (this.peak().getText().equals("ELSE")) {
 			this.hardMatch("ELSE");
-			this.instructions();
+			ifFalse = this.instructions();
 		}
 		this.hardMatch("END");
 		this.obs.accend();
+		return new If(c, ifTrue, ifFalse);
 	}
 	
 	/**
 	 * Confirms the Condition Non-terminal.
 	 */
-	private void condition() {
+	private Condition condition() {
 		this.obs.add("Condition");
 		this.obs.decend();
-		this.expression();
+		Expression left = this.expression();
 		String next = this.peak().getText();
 		if (next.equals("=") || next.equals("#") 
 				|| next.equals("<") || next.equals(">") 
@@ -472,58 +487,75 @@ public class Parser {
 		} else {
 			error("Operator expected in condition", this.peak().getStart());
 		}
-		this.expression();
+		Expression right = this.expression();
 		this.obs.accend();
+		if (isArithmeticable(left) && isArithmeticable(right)) {
+			return new Condition(left, right, next);
+		} else {
+			throw new ParserException("condition: comparing non-integers");
+		}
 	}
 	
 	/**
 	 * Confirms the Repeat Non-terminal.
 	 */
-	private void repeat() {
+	private Repeat repeat() {
 		this.obs.add("Repeat");
 		this.obs.decend();
 		this.hardMatch("REPEAT");
-		this.instructions();
+		Instruction i = this.instructions();
 		this.hardMatch("UNTIL");
-		this.condition();
+		Condition c = this.condition();
 		this.hardMatch("END");
 		this.obs.accend();
+		return new Repeat(c, i);
 	}
 	
 	/**
 	 * Confirms the While Non-terminal.
 	 */
-	private void while1() {
+	private Repeat while1() {
 		this.obs.add("While");
 		this.obs.decend();
 		this.hardMatch("WHILE");
-		this.condition();
+		Condition c = this.condition();
 		this.hardMatch("DO");
-		this.instructions();
+		Instruction i = this.instructions();
 		this.hardMatch("END");
 		this.obs.accend();
+		return new Repeat(c.getOpposite(), i);
 	}
 	
 	/**
 	 * Confirms the Read Non-terminal.
 	 */
-	private void read() {
+	private Read read() {
 		this.obs.add("Read");
 		this.obs.decend();
 		this.hardMatch("READ");
-		this.designator();
+		Expression exp = this.designator();
 		this.obs.accend();
+		if (exp instanceof Location) {
+			return new Read((Location) exp);
+		} else {
+			throw new ParserException("read: reading to non-variable");
+		}
 	}
 	
 	/**
 	 * Confirms the Write Non-terminal.
 	 */
-	private void write() {
+	private Write write() {
 		this.obs.add("Write");
 		this.obs.decend();
 		this.hardMatch("WRITE");
-		this.expression();
+		Expression e = this.expression();
 		this.obs.accend();
+		if (isArithmeticable(e)) {
+			return new Write(e);
+		} else {
+			throw new ParserException("write: writing non-integer");
+		}
 	}
 	
 	/**

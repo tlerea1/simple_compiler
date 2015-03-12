@@ -38,4 +38,12 @@ public class Field extends Location {
 			throw new ParserException("Field type non-Record");
 		}
 	}
+	
+	/**
+	 * Function to accept the given visitor.
+	 * @param v the visitor to visit
+	 */
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
 }
