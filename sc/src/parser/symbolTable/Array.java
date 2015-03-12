@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import visitor.Visitor;
+
 /**
  * Class to represent an ARRYA type in SIMPLE.
  * @author tuvialerea

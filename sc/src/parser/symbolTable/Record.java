@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import visitor.Visitor;
+
 /**
  * Class to represent a RECORD type for SIMPLE.
  * @author tuvialerea

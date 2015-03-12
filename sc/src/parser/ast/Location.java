@@ -1,6 +1,7 @@
 package parser.ast;
 
 import parser.symbolTable.Type;
+import visitor.ASTVisitor;
 
 public abstract class Location extends Expression {
 	public abstract Type getType();
@@ -13,7 +14,7 @@ public abstract class Location extends Expression {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

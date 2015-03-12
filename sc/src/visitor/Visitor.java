@@ -1,4 +1,12 @@
-package parser.symbolTable;
+package visitor;
+
+import parser.symbolTable.Array;
+import parser.symbolTable.Constant;
+import parser.symbolTable.Entry;
+import parser.symbolTable.Integer;
+import parser.symbolTable.Record;
+import parser.symbolTable.Scope;
+import parser.symbolTable.Variable;
 
 /**
  * Visitor interface. Used to create representations of the symbol table.
@@ -20,7 +28,7 @@ public interface Visitor {
 	 * Visits the given Variable. Which includes its type.
 	 * @param var the Variable to visit.
 	 */
-	public void visit(Variable var);
+	public void visit(parser.symbolTable.Variable var);
 	/**
 	 * Visits the given Integer.
 	 * @param i the Integer to visit.

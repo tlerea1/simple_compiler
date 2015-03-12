@@ -1,5 +1,7 @@
 package parser.ast;
 
+import visitor.ASTVisitor;
+
 public class If extends Instruction {
 	private Condition condition;
 	private Instruction ifTrue;
@@ -45,7 +47,7 @@ public class If extends Instruction {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

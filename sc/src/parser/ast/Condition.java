@@ -1,6 +1,7 @@
 package parser.ast;
 
 import parser.ParserException;
+import visitor.ASTVisitor;
 
 public class Condition extends Node {
 	private Expression left;
@@ -81,7 +82,7 @@ public class Condition extends Node {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

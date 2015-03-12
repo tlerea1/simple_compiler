@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import visitor.Visitor;
+
 /**
  * Class to represent the INTEGER type in SIMPLE. 
  * NOTE: This is a singleton class!!

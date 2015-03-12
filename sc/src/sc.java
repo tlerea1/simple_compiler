@@ -60,6 +60,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
+//			e.printStackTrace();
 		}
 	}
 
@@ -81,8 +82,8 @@ public class sc {
 		if (! option.startsWith("-") || option.length() != 2) { // sanity check of option
 			throw new RuntimeException("invalid option");
 		}
-		if (graphical && (option.charAt(1) != 'c' && option.charAt(1) != 't')) {
-			throw new RuntimeException("cannot use -g without -c");
+		if (graphical && (option.charAt(1) != 'c' && option.charAt(1) != 't' && option.charAt(1) != 'a')) {
+			throw new RuntimeException("cannot use -g without -c/t/a");
 		}
 		switch(option.charAt(1)) {
 			case 's': // if -s
@@ -119,6 +120,15 @@ public class sc {
 				System.out.print(p.getSymbolTable());
 				break;
 			case 'a': // -a
+				if (filename == null) {
+					sc = new Scanner();
+				} else {
+					sc = new Scanner(filename);
+				}
+				p = new Parser(sc, graphical);
+				p.parse();
+				System.out.print(p.getAST());
+				break;
 			case 'i': // -i
 				throw new RuntimeException("Unimplemented Option"); // Will change
 			default:

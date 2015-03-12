@@ -3,6 +3,7 @@ package parser.ast;
 import parser.ParserException;
 import parser.symbolTable.Array;
 import parser.symbolTable.Type;
+import visitor.ASTVisitor;
 
 public class Index extends Location {
 	private Location loc;
@@ -42,7 +43,7 @@ public class Index extends Location {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

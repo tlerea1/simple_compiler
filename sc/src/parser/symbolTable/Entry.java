@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import visitor.Visitor;
+
 
 public abstract class Entry {
 	

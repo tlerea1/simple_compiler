@@ -4,6 +4,7 @@ import parser.ParserException;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Integer;
 import parser.symbolTable.Type;
+import visitor.ASTVisitor;
 
 public class Binary extends Expression {
 	private String operator;
@@ -76,7 +77,7 @@ public class Binary extends Expression {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

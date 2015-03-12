@@ -1,8 +1,15 @@
-package parser.symbolTable;
+package visitor;
 import java.util.Map;
 import java.util.SortedSet;
 
 import parser.ParserException;
+import parser.symbolTable.Array;
+import parser.symbolTable.Constant;
+import parser.symbolTable.Entry;
+import parser.symbolTable.Integer;
+import parser.symbolTable.Record;
+import parser.symbolTable.Scope;
+import parser.symbolTable.Variable;
 
 /**
  * Class to store and build the basic symbol table representation.
@@ -11,8 +18,8 @@ import parser.ParserException;
  */
 public class PlainVisitor implements Visitor {
 
-	private String indent; // indent string
-	private String data; // String representation
+	protected String indent; // indent string
+	protected String data; // String representation
 	
 	public PlainVisitor() {
 		this.indent = "";
@@ -97,11 +104,11 @@ public class PlainVisitor implements Visitor {
 		this.data += this.indent + "END SCOPE\n";
 	}
 	
-	private void indent() {
+	protected void indent() {
 		this.indent += "  "; // Adds two spaces to the indent string
 	}
 	
-	private void dedent() {
+	protected void dedent() {
 		if (this.indent.length() >= 2) {
 			this.indent = this.indent.substring(0, this.indent.length() - 2); // removes to spaces from the indent string
 		} else {

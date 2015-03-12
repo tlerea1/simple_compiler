@@ -1,5 +1,7 @@
 package parser.ast;
 
+import visitor.ASTVisitor;
+
 public class Write extends Instruction {
 	private Expression exp;
 	
@@ -19,7 +21,7 @@ public class Write extends Instruction {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

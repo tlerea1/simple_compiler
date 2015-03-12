@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import visitor.Visitor;
+
 /**
  * Scope class. Used as the symbol table and in RECORDs.
  * @author tuvialerea

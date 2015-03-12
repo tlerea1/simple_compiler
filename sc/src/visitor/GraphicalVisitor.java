@@ -1,7 +1,15 @@
-package parser.symbolTable;
+package visitor;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.SortedSet;
+
+import parser.symbolTable.Array;
+import parser.symbolTable.Constant;
+import parser.symbolTable.Entry;
+import parser.symbolTable.Integer;
+import parser.symbolTable.Record;
+import parser.symbolTable.Scope;
+import parser.symbolTable.Variable;
 
 /**
  * Class for GraphicalVisitor to create graphical DOT representation of the symbol table.

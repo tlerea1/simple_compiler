@@ -1,6 +1,7 @@
 package parser.ast;
 
 import parser.symbolTable.Constant;
+import visitor.ASTVisitor;
 
 public class Number extends Expression {
 	private Constant num;
@@ -26,7 +27,7 @@ public class Number extends Expression {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(Visitor v) {
+	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
 }

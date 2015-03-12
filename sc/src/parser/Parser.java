@@ -19,17 +19,17 @@ import parser.ast.Write;
 import parser.symbolTable.Array;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
-import parser.symbolTable.GraphicalVisitor;
 import parser.symbolTable.Integer;
-import parser.symbolTable.PlainVisitor;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
 import parser.symbolTable.Variable;
-import parser.symbolTable.Visitor;
 import scanner.Scanner;
 import scanner.Token;
 import scanner.TokenType;
+import visitor.GraphicalVisitor;
+import visitor.PlainVisitor;
+import visitor.Visitor;
 
 /**
  * The SC Parser class.
@@ -45,7 +45,8 @@ public class Parser {
 	private List<Token> tokens;
 	private int position;
 	private Scope current;
-	private Visitor visit;
+	private visitor.Visitor STVisit;
+	private visitor.ASTVisitor astVisit;
 	private Integer singletonInt;
 	private Instruction ast;
 	
@@ -60,10 +61,12 @@ public class Parser {
 		this.position = 0;
 		if (graphical) {
 			this.obs = new GraphicalObserver();
-			this.visit = new GraphicalVisitor();
+			this.STVisit = new GraphicalVisitor();
+			// TODO: add AST graphical
 		} else {
 			this.obs = new BasicObserver();
-			this.visit = new PlainVisitor();
+			this.STVisit = new PlainVisitor();
+			this.astVisit = new visitor.PlainASTVisitor();
 		}
 		Scope universe = new Scope(null);
 		this.singletonInt = new Integer();
@@ -313,6 +316,8 @@ public class Parser {
 		} else if (e instanceof Location) {
 			Type t = ((Location) e).getType();
 			return t instanceof Integer;
+		} else if (e instanceof Binary) {
+			return true;
 		}
 		return false;
 	}
@@ -357,13 +362,14 @@ public class Parser {
 		this.obs.decend();
 		Expression toReturn = this.factor();
 		while (this.peak().getText().equals("*") || this.peak().getText().equals("DIV") || this.peak().getText().equals("MOD")) {
+			String op = this.peak().getText();
+			this.obs.add(this.next());
 			Expression right = this.factor();
 			if (isArithmeticable(toReturn) && isArithmeticable(right)) {
-				toReturn = new parser.ast.Binary(toReturn, this.factor(), this.peak().getText());
+				toReturn = new parser.ast.Binary(toReturn, right, op);
 			} else {
 				throw new ParserException("term: using arithmetic on non-integers");
 			}
-			this.obs.add(this.next());
 		}
 		this.obs.accend();
 		return toReturn;
@@ -387,7 +393,7 @@ public class Parser {
 		} else if (peak.getType() == TokenType.IDENTIFIER) {
 			exp = this.designator();
 		} else {
-			error("Factor error", peak.getStart());
+			error("Factor error: " + peak.getText(), peak.getStart());
 		}
 		this.obs.accend();
 		return exp;
@@ -400,9 +406,11 @@ public class Parser {
 		this.obs.add("Instructions");
 		this.obs.decend();
 		Instruction toReturn = this.instruction();
+		Instruction current = toReturn;
 		while (this.peak().getText().equals(";")) {
 			this.hardMatch(";");
-			toReturn.setNext(this.instruction());
+			current.setNext(this.instruction());
+			current = current.getNext();
 		}
 		this.obs.accend();
 		return toReturn;
@@ -418,15 +426,15 @@ public class Parser {
 		if (this.peak().getType() == TokenType.IDENTIFIER) {
 			toReturn = this.assign();
 		} else if (this.peak().getText().equals("IF")) {
-			this.if1();
+			toReturn = this.if1();
 		} else if (this.peak().getText().equals("REPEAT")) {
-			this.repeat();
+			toReturn = this.repeat();
 		} else if (this.peak().getText().equals("WHILE")) {
-			this.while1();
+			toReturn = this.while1();
 		} else if (this.peak().getText().equals("READ")) {
-			this.read();
+			toReturn = this.read();
 		} else if (this.peak().getText().equals("WRITE")) {
-			this.write();
+			toReturn = this.write();
 		} else {
 			error("Illegal Instruction", this.peak().getStart());
 		}
@@ -446,6 +454,16 @@ public class Parser {
 			this.hardMatch(":=");
 			Expression e = this.expression();
 			this.obs.accend();
+			if (e instanceof Location) {
+				Type t = ((Location) e).getType();
+				if (((Location) exp).getType() != t) { // Do not refer to the same type
+					throw new ParserException("Assignment between two different types");
+				}
+			} else { // Binary or Number ie INTEGER
+ 				if (! (((Location) exp).getType() instanceof Integer)) {
+ 					throw new ParserException("Assigning Integer to non-integer");
+ 				}
+			}
 			return new Assign(((Location) exp), e);
 		} else {
 			throw new ParserException("assign: assigning to constant");
@@ -718,8 +736,15 @@ public class Parser {
 	}
 	
 	public String getSymbolTable() {
-		this.current.accept(this.visit);
-		return this.visit.toString();
+		this.current.accept(this.STVisit);
+		return this.STVisit.toString();
+	}
+	
+	public String getAST() {
+		if (this.ast != null) {
+			this.ast.accept(this.astVisit);
+		}
+		return this.astVisit.toString();
 	}
 	
 	/**
