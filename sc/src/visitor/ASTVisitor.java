@@ -17,23 +17,23 @@ import parser.ast.Variable;
 import parser.ast.Write;
 
 public interface ASTVisitor extends Visitor {
-	public void visit(Node n);
+	public int visit(Node n);
 	
-	public void visit(Instruction i);
-	public void visit(Assign a);
-	public void visit(If a);
-	public void visit(Repeat r);
-	public void visit(Read r);
-	public void visit(Write w);
+	public int visit(Instruction i);
+	public int visit(Assign a);
+	public int visit(If a);
+	public int visit(Repeat r);
+	public int visit(Read r);
+	public int visit(Write w);
 	
-	public void visit(Expression e);
-	public void visit(Binary b);
-	public void visit(Number n);
-	public void visit(Location l);
-	public void visit(parser.ast.Variable v);
-	public void visit(Index i);
-	public void visit(Field f);
+	public int visit(Expression e);
+	public int visit(Binary b);
+	public int visit(Number n);
+	public int visit(Location l);
+	public int visit(parser.ast.Variable v);
+	public int visit(Index i);
+	public int visit(Field f);
 	
-	public void visit(Condition c);
+	public int visit(Condition c);
 
 }

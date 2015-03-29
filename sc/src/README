@@ -4,6 +4,21 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW5:
+
+For this assignment we added the Abstract Syntax tree. To do this
+we needed to include a large number of subclasses to Node. All of
+these classes can be found in parser.ast. Additionally I added
+A new type of visitor for displaying the ast. The ast is generated
+throughout all of the non-terminal functions in parser.java. This
+is accomplished by using the parsed tokens to create nodes recursively
+as described by the abstract grammer of SIMPLE. Constant folding occurs
+before an Expression is returned by expression(). This is also done
+recursively by all the subclasses fold() methods. Additionally, the getType()
+function for Locations was added to easily recusively check a Location
+for the resulting type. 
+
+
 HW4:
 
 This assignment we added declaration handling and creation of

@@ -1,4 +1,6 @@
 package parser.symbolTable;
+import interpreter.environment.Environment;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,6 +117,16 @@ public class Scope {
 		});
 		set.addAll(this.table.entrySet());
 		return set;
+	}
+	
+	public Environment getEnvironment() {
+		Environment toReturn = new Environment();
+		for (Map.Entry<String, Entry> entry : this.table.entrySet()) {
+			if (entry.getValue() instanceof Variable) {
+				toReturn.put(entry.getKey(), ((Variable) entry.getValue()).getType().getBox());
+			}
+		}
+		return toReturn;
 	}
 	
 }

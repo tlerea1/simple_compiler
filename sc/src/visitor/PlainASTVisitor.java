@@ -26,17 +26,17 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 	}
 	
 	@Override
-	public void visit(Node n) {
+	public int visit(Node n) {
 		throw new ParserException("visiting node");
 	}
 
 	@Override
-	public void visit(Instruction i) {
+	public int visit(Instruction i) {
 		throw new ParserException("visiting instruction");
 	}
 
 	@Override
-	public void visit(Assign a) {
+	public int visit(Assign a) {
 		this.data += this.indent + "Assign:\n";
 		this.data += this.indent + "location =>\n";
 		this.indent();
@@ -49,10 +49,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		if (a.getNext() != null) {
 			a.getNext().accept(this);
 		}
+		return 0;
 	}
 
 	@Override
-	public void visit(If a) {
+	public int visit(If a) {
 		this.data += this.indent + "If:\n";
 		this.data += this.indent + "condition =>\n";
 		this.indent();
@@ -71,10 +72,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		if (a.getNext() != null) {
 			a.getNext().accept(this);
 		}
+		return 0;
 	}
 
 	@Override
-	public void visit(Repeat r) {
+	public int visit(Repeat r) {
 		this.data += this.indent + "Repeat:\n";
 		this.data += this.indent + "condition =>\n";
 		this.indent();
@@ -87,10 +89,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		if (r.getNext() != null) {
 			r.getNext().accept(this);
 		}
+		return 0;
 	}
 
 	@Override
-	public void visit(Read r) {
+	public int visit(Read r) {
 		this.data += this.indent + "Read:\n";
 		this.data += this.indent + "location =>\n";
 		this.indent();
@@ -99,10 +102,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		if (r.getNext() != null) {
 			r.getNext().accept(this);
 		}
+		return 0;
 	}
 
 	@Override
-	public void visit(Write w) {
+	public int visit(Write w) {
 		this.data += this.indent + "Write:\n";
 		this.data += this.indent + "expression =>\n";
 		this.indent();
@@ -111,15 +115,16 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		if (w.getNext() != null) {
 			w.getNext().accept(this);
 		}
+		return 0;
 	}
 
 	@Override
-	public void visit(Expression e) {
+	public int visit(Expression e) {
 		throw new ParserException("visiting expression");
 	}
 
 	@Override
-	public void visit(Binary b) {
+	public int visit(Binary b) {
 		this.data += this.indent + "Binary (" + b.getOperator() + "):\n";
 		this.data += this.indent + "left =>\n";
 		this.indent();
@@ -129,33 +134,36 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		this.indent();
 		b.getRight().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 	@Override
-	public void visit(Number n) {
+	public int visit(Number n) {
 		this.data += this.indent + "Number:\n";
 		this.data += this.indent + "value =>\n";
 		this.indent();
 		n.getNum().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 	@Override
-	public void visit(Location l) {
+	public int visit(Location l) {
 		throw new ParserException("visiting location");
 	}
 
 	@Override
-	public void visit(Variable v) {
+	public int visit(Variable v) {
 		this.data += this.indent + "Variable:\n";
 		this.data += this.indent + "variable =>\n";
 		this.indent();
 		v.getVar().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 	@Override
-	public void visit(Index i) {
+	public int visit(Index i) {
 		this.data += this.indent + "Index:\n";
 		this.data += this.indent + "location =>\n";
 		this.indent();
@@ -165,10 +173,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		this.indent();
 		i.getExp().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 	@Override
-	public void visit(Field f) {
+	public int visit(Field f) {
 		this.data += this.indent + "Field:\n";
 		this.data += this.indent + "location =>\n";
 		this.indent();
@@ -178,10 +187,11 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		this.indent();
 		f.getVar().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 	@Override
-	public void visit(Condition c) {
+	public int visit(Condition c) {
 		this.data += this.indent + "Condition (" + c.getOperator() + "):\n";
 		this.data += this.indent + "left =>\n";
 		this.indent();
@@ -191,6 +201,7 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		this.indent();
 		c.getRight().accept(this);
 		this.dedent();
+		return 0;
 	}
 
 }

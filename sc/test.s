@@ -1,29 +1,28 @@
-/* This program tests basic type declarations. */
-
 PROGRAM X;
-  TYPE x = ARRAY 55 OF INTEGER;
-  TYPE y = x;
-  TYPE z = RECORD
-    a: INTEGER;
-    b: y;
-  END;
-	CONST a = 6;
-	VAR first : INTEGER;
-	VAR second : INTEGER;
-	VAR third : x;
-	VAR forth : x;
-	BEGIN
-		third := forth;
-		third := forth;
-		a := forth;
-		first := forth;
-		first := 6 + 5;
-		IF first - 1 > a + 2 THEN
-			WRITE 52
-		ELSE
-			WRITE 76 DIV 3
-		END;
-		WHILE first <= 6 DO
-			first := first + 1
-		END
+CONST a=6;
+VAR b : INTEGER;
+TYPE ra=ARRAY 5 OF INTEGER;
+TYPE rec=RECORD
+    a : INTEGER;
+    b : INTEGER;
+    END;
+VAR c,d : ra;
+VAR e,f : rec;
+BEGIN
+b := a + 14;
+c[2] := b;
+WRITE d[2];
+d := c;
+WRITE b;
+WRITE c[2];
+WRITE d[2];
+e.a := 15;
+e.b := c[2];
+f := e;
+e.a := 15 DIV (b - 20);
+WRITE f.a;
+f.a := 105;
+WRITE e.a;
+c[4] := 15
 END X.
+

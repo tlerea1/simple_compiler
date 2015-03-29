@@ -59,8 +59,14 @@ public class Binary extends Expression {
 					case "*":
 						return new Number(new Constant(left * right, t));
 					case "DIV":
+						if (right == 0) {
+							throw new ParserException("Division by 0 is not allowed");
+						}
 						return new Number(new Constant(left / right, t));
 					case "MOD":
+						if (right == 0) {
+							throw new ParserException("Mod by 0 is not allowed");
+						}
 						return new Number(new Constant(left % right, t));
 					default:
 						throw new ParserException("binary fold: Invalid opperator");
@@ -77,7 +83,7 @@ public class Binary extends Expression {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(ASTVisitor v) {
-		v.visit(this);
+	public int accept(ASTVisitor v) {
+		return v.visit(this);
 	}
 }

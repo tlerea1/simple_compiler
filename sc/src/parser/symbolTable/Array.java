@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import interpreter.environment.ArrayBox;
+import interpreter.environment.Box;
 import visitor.Visitor;
 
 /**
@@ -51,5 +53,9 @@ public class Array extends Type {
 	 */
 	public void accept(Visitor v) {
 		v.visit(this);
+	}
+	
+	public Box getBox() {
+		return new ArrayBox(this.length, this.elemType);
 	}
 }

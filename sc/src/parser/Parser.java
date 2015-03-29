@@ -27,6 +27,8 @@ import parser.symbolTable.Variable;
 import scanner.Scanner;
 import scanner.Token;
 import scanner.TokenType;
+import util.Singleton;
+import visitor.ASTGraphicalVisitor;
 import visitor.GraphicalVisitor;
 import visitor.PlainVisitor;
 import visitor.Visitor;
@@ -44,11 +46,11 @@ public class Parser {
 	private Observer obs;
 	private List<Token> tokens;
 	private int position;
-	private Scope current;
-	private visitor.Visitor STVisit;
-	private visitor.ASTVisitor astVisit;
-	private Integer singletonInt;
-	private Instruction ast;
+	private Scope current; // Symbol Table
+	private visitor.Visitor STVisit; // Symbol table visitor
+	private visitor.ASTVisitor astVisit; // AST visitor
+	private Integer singletonInt; // Singleton instance of Integer class
+	private Instruction ast; // Abstract Syntax Tree
 	
 	/**
 	 * Creates a new instance of the parser object.
@@ -62,14 +64,14 @@ public class Parser {
 		if (graphical) {
 			this.obs = new GraphicalObserver();
 			this.STVisit = new GraphicalVisitor();
-			// TODO: add AST graphical
+			this.astVisit = new ASTGraphicalVisitor();
 		} else {
 			this.obs = new BasicObserver();
 			this.STVisit = new PlainVisitor();
 			this.astVisit = new visitor.PlainASTVisitor();
 		}
 		Scope universe = new Scope(null);
-		this.singletonInt = new Integer();
+		this.singletonInt = Singleton.getInteger();
 		universe.insert("INTEGER", this.singletonInt);
 		this.current = new Scope(universe);
 	}
@@ -280,6 +282,9 @@ public class Parser {
 			Expression exp = this.expression();
 			if (exp instanceof Number) {
 				int len = ((Number) exp).getNum().getValue();
+				if (len < 0) {
+					throw new ParserException("arrayDecl: array length is negative");
+				}
 				this.hardMatch("OF");
 				Type t = this.type();
 				toReturn = new Array(len, t);
@@ -310,6 +315,11 @@ public class Parser {
 		return toReturn;
 	}
 	
+	/**
+	 * Determines if the given expression is an integer.
+	 * @param e the expression to check
+	 * @return true if can evaluate to integer
+	 */
 	private boolean isArithmeticable(Expression e) {
 		if (e instanceof Number) {
 			return true;
@@ -330,13 +340,20 @@ public class Parser {
 		this.obs.decend();
 		Expression toReturn;
 		if (this.peak().getText().equals("+") || this.peak().getText().equals("-")) {
+			String op = this.peak().getText();
+			this.obs.add(this.next());
 			Expression right = this.term();
 			if (isArithmeticable(right)) {
-				toReturn = new Binary(new Number(new Constant(1, this.singletonInt)), right, this.peak().getText());
+				int val = 0;
+				if (op.equals("-")) {
+					val = -1;
+				} else {
+					val = 1;
+				}
+				toReturn = new Binary(new Number(new Constant(val, this.singletonInt)), right, "*");
 			} else {
 				throw new ParserException("expression: using arithmetic on non-integers");
 			}
-			this.obs.add(this.next());
 		} else {
 			toReturn = this.term();
 		}
@@ -532,7 +549,7 @@ public class Parser {
 	/**
 	 * Confirms the While Non-terminal.
 	 */
-	private Repeat while1() {
+	private If while1() {
 		this.obs.add("While");
 		this.obs.decend();
 		this.hardMatch("WHILE");
@@ -541,7 +558,7 @@ public class Parser {
 		Instruction i = this.instructions();
 		this.hardMatch("END");
 		this.obs.accend();
-		return new Repeat(c.getOpposite(), i);
+		return new If(c, new Repeat(c.getOpposite(), i), null);
 	}
 	
 	/**
@@ -554,7 +571,11 @@ public class Parser {
 		Expression exp = this.designator();
 		this.obs.accend();
 		if (exp instanceof Location) {
-			return new Read((Location) exp);
+			if (((Location) exp).getType() instanceof Integer) {
+				return new Read((Location) exp);
+			} else {
+				throw new ParserException("read: reading into non-integer variable");	
+			}
 		} else {
 			throw new ParserException("read: reading to non-variable");
 		}
@@ -588,14 +609,14 @@ public class Parser {
 		Expression toReturn;
 		if (e instanceof parser.symbolTable.Variable) {
 			var = (parser.symbolTable.Variable) e;
-			parser.ast.Variable v = new parser.ast.Variable(var);
+			parser.ast.Variable v = new parser.ast.Variable(ident, var);
 			toReturn = this.selector(v);
 		} else if (e instanceof Constant) { 
 			this.selector(null);
 			Constant c = ((Constant) e);
 			toReturn = new Number(c);
 		} else {
-			throw new ParserException("Designator found refernce to type identifier");
+			throw new ParserException("Designator found refernce to Type identifier");
 		}
 
 		this.obs.accend();
@@ -615,9 +636,9 @@ public class Parser {
 					throw new ParserException("selector: indexing constant");
 				}
 				this.hardMatch("[");
-				Collection<parser.ast.Number> indecies = this.expressionList();
+				Collection<Expression> indecies = this.expressionList();
 				this.hardMatch("]");
-				for (parser.ast.Number i : indecies) {
+				for (parser.ast.Expression i : indecies) {
 					Index inx = new Index(current, i);
 					inx.getType(); // Forces error checking
 					current = inx;
@@ -658,7 +679,7 @@ public class Parser {
 		if (t instanceof Record) {
 			Entry e = ((Record) t).getScope().find(ident);
 			if (e != null && e instanceof parser.symbolTable.Variable) {
-				return new Field(loc, new parser.ast.Variable((parser.symbolTable.Variable) e));
+				return new Field(loc, new parser.ast.Variable(ident, (parser.symbolTable.Variable) e));
 			} else {
 				throw new ParserException("Selector: Could not find field of given Record");
 			}
@@ -671,21 +692,21 @@ public class Parser {
 	/**
 	 * Confirms the ExpressionList Non-terminal.
 	 */
-	private Collection<parser.ast.Number> expressionList() {
+	private Collection<parser.ast.Expression> expressionList() {
 		this.obs.add("ExpressionList");
 		this.obs.decend();
-		Collection<Number> expressions = new ArrayList<Number>();
+		Collection<Expression> expressions = new ArrayList<Expression>();
 		Expression toAdd = this.expression();
-		if (toAdd instanceof Number) {
-			expressions.add((Number)toAdd);
+		if (isArithmeticable(toAdd)) {
+			expressions.add(toAdd);
 		} else {
 			throw new ParserException("expressionList: adding non-number");
 		}
 		while (this.peak().getText().equals(",")) {
 			this.hardMatch(",");
 			toAdd = this.expression();
-			if (toAdd instanceof Number) {
-				expressions.add((Number)toAdd);
+			if (isArithmeticable(toAdd)) {
+				expressions.add(toAdd);
 			} else {
 				throw new ParserException("expressionList: adding non-number");
 			}
@@ -745,6 +766,14 @@ public class Parser {
 			this.ast.accept(this.astVisit);
 		}
 		return this.astVisit.toString();
+	}
+	
+	public Instruction getast() {
+		return this.ast;
+	}
+	
+	public Scope getST() {
+		return this.current;
 	}
 	
 	/**

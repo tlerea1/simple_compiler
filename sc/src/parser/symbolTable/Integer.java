@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import interpreter.environment.Box;
+import interpreter.environment.IntegerBox;
 import visitor.Visitor;
 
 /**
@@ -24,5 +26,9 @@ public class Integer extends Type {
 	 */
 	public void accept(Visitor v) {
 		v.visit(this);
+	}
+	
+	public Box getBox() {
+		return new IntegerBox(0);
 	}
 }

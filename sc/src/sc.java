@@ -1,3 +1,5 @@
+import interpreter.Interpreter;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -130,7 +132,16 @@ public class sc {
 				System.out.print(p.getAST());
 				break;
 			case 'i': // -i
-				throw new RuntimeException("Unimplemented Option"); // Will change
+				if (filename == null) {
+					sc = new Scanner();
+				} else {
+					sc = new Scanner(filename);
+				}
+				p = new Parser(sc, graphical);
+				p.parse();
+				Interpreter i = new Interpreter(p.getast(), p.getST());
+				i.Interpret();
+				break;
 			default:
 				throw new RuntimeException("invalid option"); // Not a preset option
 		}

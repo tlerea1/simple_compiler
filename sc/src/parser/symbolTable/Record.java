@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import interpreter.environment.Box;
+import interpreter.environment.RecordBox;
 import visitor.Visitor;
 
 /**
@@ -40,5 +42,9 @@ public class Record extends Type {
 	 */
 	public void accept(Visitor v) {
 		v.visit(this);
+	}
+	
+	public Box getBox() {
+		return new RecordBox(this.scope.getEnvironment(), this);
 	}
 }

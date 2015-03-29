@@ -18,7 +18,7 @@ import parser.symbolTable.Variable;
  */
 public class GraphicalVisitor implements Visitor {
 
-	private String data;
+	protected String data;
 	private HashSet<java.lang.Integer> included; // Set of HashCodes of types already visited.
 												 // Not visiting the same types twice prevents duplicate arrows.
 	

@@ -44,7 +44,7 @@ public class Field extends Location {
 	 * Function to accept the given visitor.
 	 * @param v the visitor to visit
 	 */
-	public void accept(ASTVisitor v) {
-		v.visit(this);
+	public int accept(ASTVisitor v) {
+		return v.visit(this);
 	}
 }
