@@ -9,6 +9,8 @@ import visitor.Visitor;
  */
 public class Variable extends Entry {
 	private Type type;
+	private int location; // Offset from base pointer
+	
 	
 	/**
 	 * Variable constructor.
@@ -48,5 +50,17 @@ public class Variable extends Entry {
 	 */
 	public void accept(Visitor v) {
 		v.visit(this);
+	}
+	
+	public int size() {
+		return this.type.size();
+	}
+
+	public int getLocation() {
+		return location;
+	}
+
+	public void setLocation(int location) {
+		this.location = location;
 	}
 }

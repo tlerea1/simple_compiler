@@ -1,6 +1,5 @@
 package parser.ast;
 
-import interpreter.environment.Box;
 import parser.symbolTable.Type;
 import visitor.ASTVisitor;
 

@@ -7,6 +7,7 @@ import java.util.Collection;
 import parser.Parser;
 import scanner.Scanner;
 import scanner.Token;
+import amd64.CodeGen;
 
 /**
  * SIMPLE compiler.
@@ -24,7 +25,7 @@ public class sc {
 				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]");
 			}
 			if (args.length == 0) {
-				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]");
+				parseOption("-d", null, false);
 			}
 			if (args.length == 1) { // Either an option and take from stdin, or a filename, run compiler
 				if (args[0].startsWith("-")) { // If option
@@ -35,7 +36,7 @@ public class sc {
 						fileDoesNotExistError(args[0]);
 					}
 					//TODO: compile input program
-					throw new RuntimeException("No option is not yet implemented"); // TODO remove later
+					parseOption("-d", args[0], false);
 				}
 			} else if (args.length == 2){ // If option and filename
 				if (isOption(args[1])) {
@@ -62,7 +63,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 
@@ -141,6 +142,17 @@ public class sc {
 				p.parse();
 				Interpreter i = new Interpreter(p.getast(), p.getST());
 				i.Interpret();
+				break;
+			case 'd': // code gen
+				if (filename == null) {
+					sc = new Scanner();
+				} else {
+					sc = new Scanner(filename);
+				}
+				p = new Parser(sc, graphical);
+				p.parse();
+				CodeGen code = new CodeGen(p.getast(), p.getST(), System.out);
+				code.generateAMD64();
 				break;
 			default:
 				throw new RuntimeException("invalid option"); // Not a preset option

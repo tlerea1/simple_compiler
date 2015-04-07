@@ -58,4 +58,8 @@ public class Array extends Type {
 	public Box getBox() {
 		return new ArrayBox(this.length, this.elemType);
 	}
+	
+	public int size() {
+		return this.length * this.elemType.size();
+	}
 }

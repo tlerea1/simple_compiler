@@ -17,6 +17,7 @@ import visitor.Visitor;
 public class Scope {
 	private Scope outer;
 	private HashMap<String, Entry> table;
+	private int offset;
 	
 	/**
 	 * Constructor for a Scope. 
@@ -25,6 +26,7 @@ public class Scope {
 	public Scope(Scope outer) {
 		this.outer = outer;
 		this.table = new HashMap<String, Entry>();
+		this.offset = -4;
 	}
 	
 	/**
@@ -127,6 +129,24 @@ public class Scope {
 			}
 		}
 		return toReturn;
+	}
+	
+	public int size() {
+		int size = 0;
+		for (Map.Entry<String, Entry> entry : this.table.entrySet()) {
+			if (entry.getValue() instanceof Variable) {
+				size += ((Variable) entry.getValue()).size();
+			}
+		}
+		return size;
+	}
+	
+	public int getOffset() {
+		return this.offset;
+	}
+	
+	public void setOffset(int offset) {
+		this.offset = offset;
 	}
 	
 }

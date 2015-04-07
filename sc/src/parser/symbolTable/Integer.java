@@ -31,4 +31,8 @@ public class Integer extends Type {
 	public Box getBox() {
 		return new IntegerBox(0);
 	}
+	
+	public int size() {
+		return 8;
+	}
 }

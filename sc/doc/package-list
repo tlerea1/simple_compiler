@@ -5,4 +5,5 @@ parser
 parser.ast
 parser.symbolTable
 scanner
+util
 visitor

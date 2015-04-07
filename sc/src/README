@@ -4,6 +4,15 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW6:
+
+For this assignment we added the interpreter to the SC. This is used by
+providing the -i option. The interpreter first creates an environment
+by traversing the symbol table and creating full boxes for all variable
+objects in the table. Then the interpreter traverses the AST and interprets
+each Instruction node. All of the interpretation code is in Interpreter.java
+while all of the boxes are in the environment package. 
+
 HW5:
 
 For this assignment we added the Abstract Syntax tree. To do this

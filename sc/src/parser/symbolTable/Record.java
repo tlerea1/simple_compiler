@@ -47,4 +47,8 @@ public class Record extends Type {
 	public Box getBox() {
 		return new RecordBox(this.scope.getEnvironment(), this);
 	}
+	
+	public int size() {
+		return this.scope.size();
+	}
 }

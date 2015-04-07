@@ -1,5 +1,10 @@
 package interpreter;
 
+/**
+ * RuntimeException thrown by the Interpreter.
+ * @author tuvialerea
+ *
+ */
 public class InterpreterException extends RuntimeException {
 
 	/**

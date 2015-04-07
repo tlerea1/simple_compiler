@@ -26,12 +26,22 @@ import parser.symbolTable.Constant;
 import parser.symbolTable.Scope;
 import util.Singleton;
 
+/**
+ * Class for interpreting SIMPLE programs.
+ * @author tuvialerea
+ *
+ */
 public class Interpreter {
 	private Instruction ast;
 	private Scope st;
 	private Environment environment;
 	private Scanner stdin;
 	
+	/**
+	 * Interpreter Constructor.
+	 * @param ast the Abstract Syntax Tree from the parser.
+	 * @param st the Symbol Table from the parser.
+	 */
 	public Interpreter(Instruction ast, Scope st) {
 		this.ast = ast;
 		this.st = st;
@@ -39,11 +49,14 @@ public class Interpreter {
 		stdin = new Scanner(System.in);
 	}
 	
+	/**
+	 * Runts the interpreter.
+	 */
 	public void Interpret() {
 		this.Interpret(this.ast);
 	}
 	
-	private void Interpret(Instruction current) {
+	private void Interpret(Instruction current) { // Runs the correct interpret function
 		while (current != null) {
 			if (current instanceof Assign) {
 				this.Interpret((Assign) current);
@@ -65,22 +78,22 @@ public class Interpreter {
 	private void Interpret(Assign inst) {
 		Box left = evaluate(inst.getLoc());
 		Expression right = evaluate(inst.getExp());
-		if (right instanceof Location) {
+		if (right instanceof Location) { // assignment of array or record
 			Box rightBox = evaluate((Location) right);
-			if (left.getType() == rightBox.getType()) {
+			if (left.getType() == rightBox.getType()) { // Correct type assignment
 				if (left instanceof IntegerBox) {
 					((IntegerBox) left).setValue(((IntegerBox)rightBox).getValue());
-				} else if (left instanceof ArrayBox) {
+				} else if (left instanceof ArrayBox) { // copy all elements
 					for (int i=0;i<((ArrayBox) left).length();i++) {
 						((ArrayBox) left).set(i, ((ArrayBox) rightBox).get(i).clone());
 					}
-				} else if (left instanceof RecordBox) {
+				} else if (left instanceof RecordBox) { // copy environment
 					((RecordBox) left).setEnvironment(((RecordBox) rightBox).getEnvironment().clone());
 				} else {
 					throw new InterpreterException("unknown box type");
 				}
 			}
-		} else if (right instanceof Number){
+		} else if (right instanceof Number){ // assignment to an integer
 			if (left instanceof IntegerBox) {
 				((IntegerBox) left).setValue(((Number) right).getNum().getValue());
 			} // Assigning to non integer checked by parser
@@ -89,7 +102,7 @@ public class Interpreter {
 		}
 	}
 	
-	private void Interpret(If inst) {
+	private void Interpret(If inst) { // run if
 		if (evaluate(inst.getCondition())) {
 			Interpret(inst.getIfTrue());
 		} else {
@@ -97,13 +110,13 @@ public class Interpreter {
 		}
 	}
 	
-	private void Interpret(Repeat inst) {
+	private void Interpret(Repeat inst) { // run repeat
 		do {
 			Interpret(inst.getInstructions());
 		} while (evaluate(inst.getCondition().getOpposite()));
 	}
 	
-	private void Interpret(Read inst) {
+	private void Interpret(Read inst) { // Run read
 		IntegerBox box = (IntegerBox) evaluate(inst.getLoc());
 		if (this.stdin.hasNextInt()) {
 			box.setValue(this.stdin.nextInt());
@@ -114,15 +127,15 @@ public class Interpreter {
 	
 	private void Interpret(Write inst) {
 		Expression exp = evaluate(inst.getExp());
-		if (exp instanceof Location) {
+		if (exp instanceof Location) { // If writing a variable
 			Box box = evaluate((Location) exp);
-			System.out.println(((IntegerBox) box).getValue());
-		} else {
+			System.out.println(((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
+		} else { // If writing number
 			System.out.println(((Number) exp).getNum().getValue());
 		}
 	}
 	
-	private Box evaluate(Location loc) {
+	private Box evaluate(Location loc) { // Runs correct evaluate function for locations
 		if (loc instanceof Field) {
 			return evaluate((Field) loc);
 		} else if (loc instanceof Index) {
@@ -135,7 +148,7 @@ public class Interpreter {
 	}
 	
 	private Box evaluate(Field loc) {
-		Box location = evaluate(loc.getLoc());
+		Box location = evaluate(loc.getLoc()); // Post order
 		if (location instanceof RecordBox) {
 			RecordBox box = (RecordBox) location;
 			return box.get(loc.getVar().getIdentifer());
@@ -145,7 +158,7 @@ public class Interpreter {
 	}
 	
 	private Box evaluate(Index loc) {
-		Box location = evaluate(loc.getLoc());
+		Box location = evaluate(loc.getLoc()); // Post-order
 		if (location instanceof ArrayBox) {
 			ArrayBox box = (ArrayBox) location;
 			return box.get(((Number) evaluate(loc.getExp())).getNum().getValue());
@@ -155,20 +168,21 @@ public class Interpreter {
 	}
 	
 	private Box evaluate(Variable loc) {
-		return this.environment.get(loc.getIdentifer()); 
+		return this.environment.get(loc.getIdentifer()); // Gets the variable from the program environement
 	}
 	
-	private Expression evaluate(Expression exp) {
-		if (exp instanceof Location) {
+	private Expression evaluate(Expression exp) { // Function mainly removes binaries through getting variable values
+		if (exp instanceof Location) { // Can either be an integer, array, or record type. If integer
+									   // dereferences and returns number node, otherwise returns the location
 			Box box = evaluate((Location) exp);
 			if (box instanceof IntegerBox) {
 				return new Number(new Constant(((IntegerBox) box).getValue(), Singleton.getInteger()));
 			} else {
 				return exp;
 			}
-		} else if (exp instanceof Binary) {
+		} else if (exp instanceof Binary) { // evaluates the binary
 			return new Number(new Constant(evaluate((Binary) exp), Singleton.getInteger()));
-		} else if (exp instanceof Number) {
+		} else if (exp instanceof Number) { // returns the number
 			return exp;
 		} else {
 			throw new InterpreterException("unknown Expression type");
@@ -176,10 +190,10 @@ public class Interpreter {
 	}
 	
 	private int evaluate(Binary exp) {
-		int left = ((Number) evaluate(exp.getLeft())).getNum().getValue();
-		int right = ((Number) evaluate(exp.getRight())).getNum().getValue();
+		int left = ((Number) evaluate(exp.getLeft())).getNum().getValue(); // pre-enforced by parser context conditions
+		int right = ((Number) evaluate(exp.getRight())).getNum().getValue();//Must be evaluatable to numbers
 		
-		switch(exp.getOperator()) {
+		switch(exp.getOperator()) { // Do operation return result
 			case "+":
 				return left + right;
 			case "-":
@@ -204,10 +218,10 @@ public class Interpreter {
 	}
 	
 	private boolean evaluate(Condition con) {
-		int left = ((Number) evaluate(con.getLeft())).getNum().getValue();
+		int left = ((Number) evaluate(con.getLeft())).getNum().getValue(); // Must be integers as per context conditions of parser
 		int right = ((Number) evaluate(con.getRight())).getNum().getValue();
 		
-		switch (con.getOperator()) {
+		switch (con.getOperator()) { // return boolean result of condition
 			case "=":
 				return left == right;
 			case ">":
