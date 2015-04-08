@@ -31,10 +31,11 @@ public class CodeGen implements ASTVisitor {
 
 	private Instruction ast;
 	private Scope st;
-	private int offset = -4;
+	private int offset = -8;
 	private PrintStream out;
+	private int currentLabel = 0;
 	
-	private final int SIZEOF_INT = 8;
+	public static final int SIZEOF_INT = 8;
 	
 	public CodeGen(Instruction ast, Scope st, PrintStream stream) {
 		this.ast = ast;
@@ -50,27 +51,40 @@ public class CodeGen implements ASTVisitor {
 	}
 	
 	private void genFunctions() {
+		this.out.println(".text");
+
 		this.out.println(".globl main");
-		this.out.println("array_out_of_bounds:");
-		this.out.println("leaq printf_arg(%rip), %rdi");
-		this.out.println("leaq array_str(%rip), %rsi");
-		this.out.println("movq $0, %rax");
-		this.out.println("call printf");
-		this.out.println("movq $1, %rdi");
-		this.out.println("call exit\n\n");
+
 		
 		this.out.println("main:\n");
+		this.out.println("push %rbp");
 		this.out.println("movq %rsp, %rbp");
+		this.out.println("subq $" + this.st.size() + ", %rsp");
 		
 	}
 	
 	private void text() {
+		this.out.println("movl $0, %eax");
+		this.out.println("leave");
 		this.out.println("retq\n\n\n");
-		this.out.println(".text");
+		
+		this.out.println("array_out_of_bounds:");
+		this.out.println("movl $printf_arg, %edi");
+		this.out.println("movl $array_str, %esi");
+		this.out.println("movl $0, %eax");
+		this.out.println("call printf");
+		this.out.println("movl $1, %edi");
+		this.out.println("call exit\n\n");
+		
+		this.out.println(".section .rodata");
 		this.out.println("array_str:");
 		this.out.println(".string \"error: Array index out of bounds!\\n\"");
 		this.out.println("printf_arg:");
 		this.out.println(".string \"%s\"");
+		this.out.println("printf_num:");
+		this.out.println(".string \"%d\\n\"");
+		this.out.println("scanf_num:");
+		this.out.println(".string \"%d\"");
 	}
 	
 	@Override
@@ -91,13 +105,13 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public void visit(Integer i) {
-		this.out.println("movl $0, " + this.offset + "(%rbp)");
-		this.offset -= i.size() * SIZEOF_INT;
+		this.out.println("movq $0, " + this.offset + "(%rbp)");
+		this.offset -= i.size();
 	}
 
 	@Override
 	public void visit(Array ra) {
-		this.out.println("movl $" + ra.getLength() + ", " + this.offset + "(%rbp)");
+		this.out.println("movq $" + ra.getLength() + ", " + this.offset + "(%rbp)");
 		this.offset -= SIZEOF_INT; // storing the length of the array
 		for (int i=0;i<ra.getLength();i++) {
 			ra.getElemType().accept(this);
@@ -130,11 +144,16 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public int visit(Assign a) {
-		a.getExp().accept(this);
+		int exp = a.getExp().accept(this);
 		a.getLoc().accept(this);
 		this.out.println("pop %rax"); // location address
 		this.out.println("pop %rbx"); // expression
-		this.out.println("movq %rbx, (%rax)");
+		if (exp == 0) {
+			this.out.println("movq %rbx, (%rax)");
+		} else {
+			this.out.println("movq (%rbx), %rcx"); // TODO: only good for integers, need all types
+			this.out.println("movq %rcx, (%rax)");
+		}
 		if (a.getNext() != null) {
 			a.getNext().accept(this);
 		}
@@ -143,7 +162,41 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public int visit(If a) {
-		// TODO Auto-generated method stub
+		a.getCondition().accept(this);
+		int current = this.currentLabel++;
+		switch (a.getCondition().getOperator()) {
+			case "=":
+				this.out.println("jne L" + current);
+				break;
+			case "#":
+				this.out.println("je L" + current);
+				break;
+			case ">":
+				this.out.println("jle L" + current);
+				break;
+			case "<":
+				this.out.println("jge L" + current);
+				break;
+			case ">=":
+				this.out.println("jl L" + current);
+				break;
+			case "<=":
+				this.out.println("jg L" + current);
+				break;
+		}
+		a.getIfTrue().accept(this);
+		if (a.getIfFalse() != null) {
+			int current2 = this.currentLabel++;
+			this.out.println("jmp L" + current2);
+			this.out.println("L" + current + ":");
+			a.getIfFalse().accept(this);
+			this.out.println("L" + current2 + ":");
+		} else {
+			this.out.println("L" + current + ":");
+		}
+		if (a.getNext() != null) {
+			a.getNext().accept(this);
+		}
 		return 0;
 	}
 
@@ -155,17 +208,41 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public int visit(Read r) {
-		// TODO Auto-generated method stub
+		r.getLoc().accept(this);
+		this.out.println("pop %rax");
+		this.out.println("push %rax");
+		this.out.println("leaq (%rax), %rdx");
+		this.out.println("movq %rdx, %rsi");
+		this.out.println("movl $scanf_num, %edi");
+		this.out.println("movl $0, %eax");
+		this.out.println("call __isoc99_scanf");
+		this.out.println("cmpl $-1, %eax");
+		int current = ++this.currentLabel;
+		this.out.println("jne L" + this.currentLabel);
+		this.out.println("pop %rax");
+		this.out.println("movq $-1, (%rax)");
+		this.out.println("jmp L" + ++this.currentLabel);
+		this.out.println("L" + current + ":");
+		this.out.println("pop %rax");
+		this.out.println("L" + this.currentLabel + ":");
+		if (r.getNext() != null) {
+			r.getNext().accept(this);
+		}
 		return 0;
 	}
 
 	@Override
 	public int visit(Write w) {
-		w.getExp().accept(this);
+		int exp = w.getExp().accept(this);
 		this.out.println("pop %rax");
-		this.out.println("movq %rax, %rsi");
-		this.out.println("leaq printf_arg(%rip), %rdi");
-		this.out.println("movq $0, %rax");
+
+		if (exp == 0) {
+			this.out.println("movq %rax, %rsi");
+		} else {
+			this.out.println("movq (%rax), %rsi");
+		}
+		this.out.println("movl $printf_num, %edi");
+		this.out.println("movl $0, %eax");
 		this.out.println("call printf");
 		if (w.getNext() != null) {
 			w.getNext().accept(this);
@@ -221,7 +298,8 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public int visit(Number n) {
-		this.out.println("push $" + n.getNum().getValue());
+		this.out.println("movq $" + n.getNum().getValue() + ", %rax");
+		this.out.println("push %rax");
 		return 0;
 	}
 
@@ -242,33 +320,43 @@ public class CodeGen implements ASTVisitor {
 	public int visit(Index i) {
 		i.getExp().accept(this);
 		i.getLoc().accept(this);
-		this.out.println("pop %rcx");
-		this.out.println("subq $4, %rcx"); // rcx holds length
+		this.out.println("pop %rcx"); // rcx holds ref -> length
 		this.out.println("pop %rax");
-		this.out.println("cmp $rax, (%rcx)");
-		this.out.println("bge array_out_of_bounds");
+		this.out.println("cmpq (%rcx), %rax");
+		this.out.println("jae array_out_of_bounds");
 		int size = ((Array) i.getLoc().getType()).getElemType().size();
-		size *= 4;
 		this.out.println("imulq $" + size + ", %rax");
 		this.out.println("subq %rax, %rcx");
+		this.out.println("subq $" + SIZEOF_INT + ", %rcx");
 		this.out.println("push %rcx");
 		return 1;
 	}
 
 	@Override
 	public int visit(Field f) {
-		// TODO Auto-generated method stub
+		// Doesnt use the location, because offset is stored in each inner var
+		int offset = f.getVar().getVar().getLocation();
+		this.out.println("movq $" + offset + ", %rax");
+		this.out.println("add %rbp, %rax");
+		this.out.println("push %rax");
 		return 1;
 	}
 
 	@Override
-	public int visit(Condition c) {
-		// TODO Auto-generated method stub
+	public int visit(Condition c) { // does a cmp left, right
+		int left = c.getLeft().accept(this);
+		int right = c.getRight().accept(this);
+		this.out.println("pop %rax"); // right
+		if (right != 0) {
+			this.out.println("movq (%rax), %rax");
+		}
+		this.out.println("pop %rbx"); // left
+		if (left != 0) {
+			this.out.println("movq (%rbx), %rbx");
+		}
+		this.out.println("cmpq %rax, %rbx");
 		return 0;
 	}
 	
-	private void allocate() {
-		
-	}
 
 }

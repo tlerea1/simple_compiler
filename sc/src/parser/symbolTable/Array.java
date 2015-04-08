@@ -2,6 +2,7 @@ package parser.symbolTable;
 
 import interpreter.environment.ArrayBox;
 import interpreter.environment.Box;
+import util.Singleton;
 import visitor.Visitor;
 
 /**
@@ -60,6 +61,6 @@ public class Array extends Type {
 	}
 	
 	public int size() {
-		return this.length * this.elemType.size();
+		return this.length * this.elemType.size() + (Singleton.getInteger().size());
 	}
 }
