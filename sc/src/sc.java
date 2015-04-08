@@ -63,7 +63,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
