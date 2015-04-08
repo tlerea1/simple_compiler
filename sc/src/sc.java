@@ -2,6 +2,7 @@ import interpreter.Interpreter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 
 import parser.Parser;
@@ -151,7 +152,14 @@ public class sc {
 				}
 				p = new Parser(sc, graphical);
 				p.parse();
-				CodeGen code = new CodeGen(p.getast(), p.getST(), System.out);
+				CodeGen code;
+				if (filename == null) {
+					code = new CodeGen(p.getast(), p.getST(), System.out);
+				} else {
+					filename = filename.substring(0, filename.indexOf('.'));
+					PrintStream out = new PrintStream(filename + ".s");
+					code = new CodeGen(p.getast(), p.getST(), out);
+				}
 				code.generateAMD64();
 				break;
 			default:

@@ -1,0 +1,12 @@
+PROGRAM Cat;
+VAR int: INTEGER;
+BEGIN
+	int := 0;
+	WHILE int # -1 DO
+		READ int;
+		IF int # -1 THEN
+			WRITE int
+		END
+	END
+END Cat.
+

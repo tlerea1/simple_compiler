@@ -4,6 +4,16 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW7:
+
+For this assignment I implemented the code generator for AMD64. Awkwardly,
+there is no good register allocation and therefore each function pushes
+its result on the stack for a future function to pop. All variables are stored
+on the stack as local variables. INTEGERS are allocated the full 8 bytes. The
+length of arrays are stored on the stack as a pseudo 'field' of the array for
+referencing. 
+
+
 HW6:
 
 For this assignment we added the interpreter to the SC. This is used by
