@@ -27,8 +27,7 @@ public class sc {
 			}
 			if (args.length == 0) {
 				parseOption("-d", null, false);
-			}
-			if (args.length == 1) { // Either an option and take from stdin, or a filename, run compiler
+			} else if (args.length == 1) { // Either an option and take from stdin, or a filename, run compiler
 				if (args[0].startsWith("-")) { // If option
 					parseOption(args[0], null, false);
 				} else { // Get filename
