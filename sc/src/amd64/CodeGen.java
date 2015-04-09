@@ -397,10 +397,15 @@ public class CodeGen implements ASTVisitor {
 
 	@Override
 	public int visit(Index i) {
-		i.getExp().accept(this);
+		int exp = i.getExp().accept(this);
 		i.getLoc().accept(this);
 		this.out.println("pop %rcx"); // rcx holds ref -> length
-		this.out.println("pop %rax");
+		if (exp == 0) {
+			this.out.println("pop %rax");
+		} else {
+			this.out.println("pop %rbx");
+			this.out.println("movq (%rbx), %rax");
+		}
 		this.out.println("cmpq (%rcx), %rax");
 		this.out.println("jae array_out_of_bounds");
 		int size = ((Array) i.getLoc().getType()).getElemType().size();
