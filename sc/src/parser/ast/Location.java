@@ -1,6 +1,9 @@
 package parser.ast;
 
+import parser.symbolTable.Bool;
+import parser.symbolTable.Constant;
 import parser.symbolTable.Type;
+import util.Singleton;
 import visitor.ASTVisitor;
 
 public abstract class Location extends Expression {
@@ -13,6 +16,14 @@ public abstract class Location extends Expression {
 	
 	public Expression fold() {
 		return this;
+	}
+	
+	public Expression getOpposite() {
+		if (this.getType() instanceof Bool) {
+			return new Binary(new Number(new Constant(1, Singleton.getBool())), this, "NOT");
+		} else {
+			throw new RuntimeException("Cannot negate non-bool");
+		}
 	}
 	
 	/**

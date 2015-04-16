@@ -7,9 +7,9 @@ import parser.symbolTable.Type;
 import visitor.ASTVisitor;
 
 public class Binary extends Expression {
-	private String operator;
-	private Expression left;
-	private Expression right;
+	protected String operator;
+	protected Expression left;
+	protected Expression right;
 	
 	public Binary(Expression left, Expression right, String op) {
 		this.setOperator(op);
@@ -21,11 +21,11 @@ public class Binary extends Expression {
 		return operator;
 	}
 	public void setOperator(String operator) {
-		if (!operator.equals("+") && !operator.equals("-") 
-				&& !operator.equals("*") && !operator.equals("DIV")
-				&& !operator.equals("MOD")) {
-			throw new ParserException("Making binary with invalid operator");
-		}
+//		if (!operator.equals("+") && !operator.equals("-") 
+//				&& !operator.equals("*") && !operator.equals("DIV")
+//				&& !operator.equals("MOD")) {
+//			throw new ParserException("Making binary with invalid operator");
+//		}
 		this.operator = operator;
 	}
 	public Expression getLeft() {
@@ -47,33 +47,36 @@ public class Binary extends Expression {
 
 		if (this.left instanceof Number
 				&& this.right instanceof Number) {
-			Type t = ((Number) this.left).getNum().getType();
-			if (t instanceof Integer) {
-				int left = ((Number) this.left).getNum().getValue();
-				int right = ((Number) this.right).getNum().getValue();
-				switch (this.operator) {
-					case "+":
-						return new Number(new Constant(left+right, t));
-					case "-":
-						return new Number(new Constant(left - right, t));
-					case "*":
-						return new Number(new Constant(left * right, t));
-					case "DIV":
-						if (right == 0) {
-							throw new ParserException("Division by 0 is not allowed");
-						}
-						return new Number(new Constant(left / right, t));
-					case "MOD":
-						if (right == 0) {
-							throw new ParserException("Mod by 0 is not allowed");
-						}
-						return new Number(new Constant(left % right, t));
-					default:
-						throw new ParserException("binary fold: Invalid opperator");
-				}
-			} else {
-				return this; // Can only fold INTEGER CONSTs
+			int left = ((Number) this.left).getNum().getValue();
+			int right = ((Number) this.right).getNum().getValue();
+			Type t = this.left.getType();
+			switch (this.operator) {
+				case "+":
+					return new Number(new Constant(left+right, t));
+				case "-":
+					return new Number(new Constant(left - right, t));
+				case "*":
+					return new Number(new Constant(left * right, t));
+				case "DIV":
+					if (right == 0) {
+						throw new ParserException("Division by 0 is not allowed");
+					}
+					return new Number(new Constant(left / right, t));
+				case "MOD":
+					if (right == 0) {
+						throw new ParserException("Mod by 0 is not allowed");
+					}
+					return new Number(new Constant(left % right, t));
+				case "AND":
+					return new Number(new Constant(left & right, t));
+				case "OR":
+					return new Number(new Constant(left | right, t));
+				case "NOT":
+					return new Number(new Constant(-1*(right-1), t));
+				default:
+					throw new ParserException("binary fold: Invalid opperator");
 			}
+
 		} else {
 			return this;
 		}
@@ -85,5 +88,15 @@ public class Binary extends Expression {
 	 */
 	public int accept(ASTVisitor v) {
 		return v.visit(this);
+	}
+
+	@Override
+	public Type getType() {
+		return this.left.getType();
+	}
+
+	@Override
+	public Expression getOpposite() {
+		throw new RuntimeException("Cannot get opposite of non-boolean binary");
 	}
 }

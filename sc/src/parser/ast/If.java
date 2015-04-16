@@ -3,27 +3,27 @@ package parser.ast;
 import visitor.ASTVisitor;
 
 public class If extends Instruction {
-	private Condition condition;
+	private Expression condition;
 	private Instruction ifTrue;
 	private Instruction ifFalse;
 	
-	public If(Condition con, Instruction ifTrue) {
+	public If(Expression con, Instruction ifTrue) {
 		this.condition = con;
 		this.ifTrue = ifTrue;
 		this.ifFalse = null;
 	}
 	
-	public If(Condition con, Instruction ifTrue, Instruction ifFalse) {
+	public If(Expression con, Instruction ifTrue, Instruction ifFalse) {
 		this.condition = con;
 		this.ifTrue = ifTrue;
 		this.ifFalse = ifFalse;
 	}
 
-	public Condition getCondition() {
+	public Expression getCondition() {
 		return condition;
 	}
 
-	public void setCondition(Condition condition) {
+	public void setCondition(Expression condition) {
 		this.condition = condition;
 	}
 

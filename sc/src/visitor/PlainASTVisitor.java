@@ -3,7 +3,6 @@ package visitor;
 import parser.ParserException;
 import parser.ast.Assign;
 import parser.ast.Binary;
-import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
 import parser.ast.If;
@@ -190,18 +189,18 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		return 0;
 	}
 
-	@Override
-	public int visit(Condition c) {
-		this.data += this.indent + "Condition (" + c.getOperator() + "):\n";
-		this.data += this.indent + "left =>\n";
-		this.indent();
-		c.getLeft().accept(this);
-		this.dedent();
-		this.data += this.indent + "right =>\n";
-		this.indent();
-		c.getRight().accept(this);
-		this.dedent();
-		return 0;
-	}
+//	@Override
+//	public int visit(Condition c) {
+//		this.data += this.indent + "Condition (" + c.getOperator() + "):\n";
+//		this.data += this.indent + "left =>\n";
+//		this.indent();
+//		c.getLeft().accept(this);
+//		this.dedent();
+//		this.data += this.indent + "right =>\n";
+//		this.indent();
+//		c.getRight().accept(this);
+//		this.dedent();
+//		return 0;
+//	}
 
 }

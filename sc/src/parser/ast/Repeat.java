@@ -3,19 +3,19 @@ package parser.ast;
 import visitor.ASTVisitor;
 
 public class Repeat extends Instruction {
-	private Condition condition;
+	private Expression condition;
 	private Instruction instructions;
 	
-	public Repeat(Condition con, Instruction instruction) {
+	public Repeat(Expression con, Instruction instruction) {
 		this.condition = con;
 		this.instructions = instruction;
 	}
 
-	public Condition getCondition() {
+	public Expression getCondition() {
 		return condition;
 	}
 
-	public void setCondition(Condition condition) {
+	public void setCondition(Expression condition) {
 		this.condition = condition;
 	}
 

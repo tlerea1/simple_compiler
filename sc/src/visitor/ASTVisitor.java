@@ -2,7 +2,6 @@ package visitor;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
-import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
 import parser.ast.If;
@@ -33,7 +32,4 @@ public interface ASTVisitor extends Visitor {
 	public int visit(parser.ast.Variable v);
 	public int visit(Index i);
 	public int visit(Field f);
-	
-	public int visit(Condition c);
-
 }

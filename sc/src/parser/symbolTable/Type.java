@@ -14,4 +14,5 @@ public abstract class Type extends Entry {
 	 * @return number of times of sizeof(int)
 	 */
 	public abstract int size();
+
 }

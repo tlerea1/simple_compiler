@@ -10,7 +10,6 @@ import java.util.Scanner;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
-import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
 import parser.ast.If;
@@ -103,7 +102,7 @@ public class Interpreter {
 	}
 	
 	private void Interpret(If inst) { // run if
-		if (evaluate(inst.getCondition())) {
+		if (intToBool(((Number) evaluate(inst.getCondition())).getNum().getValue())) {
 			Interpret(inst.getIfTrue());
 		} else {
 			Interpret(inst.getIfFalse());
@@ -113,7 +112,7 @@ public class Interpreter {
 	private void Interpret(Repeat inst) { // run repeat
 		do {
 			Interpret(inst.getInstructions());
-		} while (evaluate(inst.getCondition().getOpposite()));
+		} while (intToBool(((Number) evaluate(inst.getCondition().getOpposite())).getNum().getValue()));
 	}
 	
 	private void Interpret(Read inst) { // Run read
@@ -176,12 +175,12 @@ public class Interpreter {
 									   // dereferences and returns number node, otherwise returns the location
 			Box box = evaluate((Location) exp);
 			if (box instanceof IntegerBox) {
-				return new Number(new Constant(((IntegerBox) box).getValue(), Singleton.getInteger()));
+				return new Number(new Constant(((IntegerBox) box).getValue(), exp.getType()));
 			} else {
 				return exp;
 			}
 		} else if (exp instanceof Binary) { // evaluates the binary
-			return new Number(new Constant(evaluate((Binary) exp), Singleton.getInteger()));
+			return new Number(new Constant(evaluate((Binary) exp), exp.getType()));
 		} else if (exp instanceof Number) { // returns the number
 			return exp;
 		} else {
@@ -191,6 +190,18 @@ public class Interpreter {
 	
 	private int evaluate(Binary exp) {
 		int left = ((Number) evaluate(exp.getLeft())).getNum().getValue(); // pre-enforced by parser context conditions
+		switch (exp.getOperator()) { // Short-circuit evaluation
+			case "AND":
+				if (left == 0) {
+					return 0;
+				}
+				break;
+			case "OR":
+				if (left == 1) {
+					return 1;
+				}
+				break;
+		}
 		int right = ((Number) evaluate(exp.getRight())).getNum().getValue();//Must be evaluatable to numbers
 		
 		switch(exp.getOperator()) { // Do operation return result
@@ -212,30 +223,39 @@ public class Interpreter {
 				} else {
 					throw new InterpreterException("RuntimeError: modulo by zero");
 				}
+			case "AND":
+				return left & right;
+			case "OR":
+				return left | right;
+			case "NOT":
+				return -1*(right-1);
+			case "=":
+				return boolToInt(left == right);
+			case ">":
+				return boolToInt(left > right);
+			case "<":
+				return boolToInt(left < right);
+			case "#":
+				return boolToInt(left != right);
+			case ">=":
+				return boolToInt(left >= right);
+			case "<=":
+				return boolToInt(left <= right);
+			
 			default:
 				throw new InterpreterException("unknown operator in binary");
 		}
 	}
 	
-	private boolean evaluate(Condition con) {
-		int left = ((Number) evaluate(con.getLeft())).getNum().getValue(); // Must be integers as per context conditions of parser
-		int right = ((Number) evaluate(con.getRight())).getNum().getValue();
-		
-		switch (con.getOperator()) { // return boolean result of condition
-			case "=":
-				return left == right;
-			case ">":
-				return left > right;
-			case "<":
-				return left < right;
-			case "#":
-				return left != right;
-			case ">=":
-				return left >= right;
-			case "<=":
-				return left <= right;
-			default:
-				throw new InterpreterException("unknown condition operator");
+	private int boolToInt(boolean b) {
+		if (b) {
+			return 1;
+		} else {
+			return 0;
 		}
+	}
+	
+	private boolean intToBool(int i) {
+		return i == 1;
 	}
 }

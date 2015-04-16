@@ -5,7 +5,6 @@ import java.util.Stack;
 import parser.ParserException;
 import parser.ast.Assign;
 import parser.ast.Binary;
-import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
 import parser.ast.If;
@@ -181,17 +180,17 @@ public class ASTGraphicalVisitor extends GraphicalVisitor implements
 
 	}
 
-	@Override
-	public int visit(Condition c) {
-		this.current++;
-		int current = this.current;
-		this.data += "label" + current + " [label=\"" + c.getOperator() + "\",shape=box];\n";
-		int left = c.getLeft().accept(this);
-		this.data += "label" + current + " -> label" + left + " [label=\"left\"];\n";
-		int right = c.getRight().accept(this);
-		this.data += "label" + current + " -> label" + right + " [label=\"right\"];\n";
-		return current;
-	}
+//	@Override
+//	public int visit(Condition c) {
+//		this.current++;
+//		int current = this.current;
+//		this.data += "label" + current + " [label=\"" + c.getOperator() + "\",shape=box];\n";
+//		int left = c.getLeft().accept(this);
+//		this.data += "label" + current + " -> label" + left + " [label=\"left\"];\n";
+//		int right = c.getRight().accept(this);
+//		this.data += "label" + current + " -> label" + right + " [label=\"right\"];\n";
+//		return current;
+//	}
 
 	@Override
 	public int visit(parser.ast.Number n) {

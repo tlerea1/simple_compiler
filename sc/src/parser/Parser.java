@@ -5,7 +5,6 @@ import java.util.List;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
-import parser.ast.Condition;
 import parser.ast.Expression;
 import parser.ast.Field;
 import parser.ast.If;
@@ -14,9 +13,11 @@ import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Number;
 import parser.ast.Read;
+import parser.ast.RelBinary;
 import parser.ast.Repeat;
 import parser.ast.Write;
 import parser.symbolTable.Array;
+import parser.symbolTable.Bool;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
 import parser.symbolTable.Integer;
@@ -31,7 +32,6 @@ import util.Singleton;
 import visitor.ASTGraphicalVisitor;
 import visitor.GraphicalVisitor;
 import visitor.PlainVisitor;
-import visitor.Visitor;
 
 /**
  * The SC Parser class.
@@ -73,6 +73,9 @@ public class Parser {
 		Scope universe = new Scope(null);
 		this.singletonInt = Singleton.getInteger();
 		universe.insert("INTEGER", this.singletonInt);
+		universe.insert("BOOLEAN", Singleton.getBool());
+		universe.insert("TRUE", new Constant(1, Singleton.getBool()));
+		universe.insert("FALSE", new Constant(0, Singleton.getBool()));
 		this.current = new Scope(universe);
 	}
 	
@@ -325,17 +328,32 @@ public class Parser {
 			return true;
 		} else if (e instanceof Location) {
 			Type t = ((Location) e).getType();
-			return t instanceof Integer;
+			return t instanceof Integer || t instanceof Bool;
 		} else if (e instanceof Binary) {
 			return true;
 		}
 		return false;
 	}
 	
+	private Expression expression() {
+		Expression left = this.simpleExpression();
+		if (isRelOp(this.peak().getText())) {
+			String relOp = this.next().getText();
+			Expression right = this.simpleExpression();
+			if ((left.getType() instanceof Integer && right.getType() instanceof Integer) 
+					|| (left.getType() instanceof Bool && right.getType() instanceof Bool)) {
+				return new RelBinary(left, right, relOp);
+			} else {
+				throw new ParserException("Cannot relate different types");
+			}
+		}
+		return left; // TODO Context conditions!!
+	}
+	
 	/**
 	 * Confirms the Expression Non-terminal.
 	 */
-	private Expression expression() {
+	private Expression simpleExpression() {
 		this.obs.add("Expression");
 		this.obs.decend();
 		Expression toReturn;
@@ -343,7 +361,7 @@ public class Parser {
 			String op = this.peak().getText();
 			this.obs.add(this.next());
 			Expression right = this.term();
-			if (isArithmeticable(right)) {
+			if (right.getType() instanceof Integer) {
 				int val = 0;
 				if (op.equals("-")) {
 					val = -1;
@@ -357,14 +375,22 @@ public class Parser {
 		} else {
 			toReturn = this.term();
 		}
-		while (this.peak().getText().equals("+") || this.peak().getText().equals("-")) {
+		while (this.peak().getText().equals("+") || this.peak().getText().equals("-") || this.peak().getText().equals("OR")) {
 			String op = this.peak().getText();
 			this.obs.add(this.next());
 			Expression right = this.term();
-			if (isArithmeticable(toReturn) && isArithmeticable(right)) {
-				toReturn = new Binary(toReturn, right, op);
+			if (op.equals("OR")) {
+				if (toReturn.getType() instanceof Bool && right.getType() instanceof Bool) {
+					toReturn = new Binary(toReturn, right, op);
+				} else {
+					throw new ParserException("ORing non-bools");
+				}
 			} else {
-				throw new ParserException("expression: using arithmetic on non-integers");
+				if (toReturn.getType() instanceof Integer && right.getType() instanceof Integer) {
+					toReturn = new Binary(toReturn, right, op);
+				} else {
+					throw new ParserException("adding non-integer");
+				}
 			}
 		}
 		this.obs.accend();
@@ -378,14 +404,22 @@ public class Parser {
 		this.obs.add("Term");
 		this.obs.decend();
 		Expression toReturn = this.factor();
-		while (this.peak().getText().equals("*") || this.peak().getText().equals("DIV") || this.peak().getText().equals("MOD")) {
+		while (this.peak().getText().equals("AND") || this.peak().getText().equals("*") || this.peak().getText().equals("DIV") || this.peak().getText().equals("MOD")) {
 			String op = this.peak().getText();
 			this.obs.add(this.next());
 			Expression right = this.factor();
-			if (isArithmeticable(toReturn) && isArithmeticable(right)) {
-				toReturn = new parser.ast.Binary(toReturn, right, op);
+			if (op.equals("AND")) {
+				if (toReturn.getType() instanceof Bool && right.getType() instanceof Bool) {
+					toReturn = new Binary(toReturn, right, op);
+				} else {
+					throw new ParserException("ANDing non-bools");
+				}
 			} else {
-				throw new ParserException("term: using arithmetic on non-integers");
+				if (toReturn.getType() instanceof Integer && right.getType() instanceof Integer) {
+					toReturn = new Binary(toReturn, right, op);
+				} else {
+					throw new ParserException("Multing non-integers");
+				}
 			}
 		}
 		this.obs.accend();
@@ -401,7 +435,7 @@ public class Parser {
 		Token peak = this.peak();
 		Expression exp = null;
 		if (peak.getType() == TokenType.NUMBER) {
-			exp = new Number(new Constant(java.lang.Integer.parseInt(peak.getText()), this.singletonInt));
+			exp = new Number(new Constant(java.lang.Integer.parseInt(peak.getText()), Singleton.getInteger()));
 			this.obs.add(this.next());
 		} else if (peak.getText().equals("(")) {
 			this.hardMatch("(");
@@ -409,6 +443,14 @@ public class Parser {
 			this.hardMatch(")");
 		} else if (peak.getType() == TokenType.IDENTIFIER) {
 			exp = this.designator();
+		} else if (peak.getText().equals("NOT")) {
+			this.next();
+			Expression fac = this.factor();
+			if (fac.getType() instanceof Bool) {
+				exp = new Binary(new Number(new Constant(0, Singleton.getBool())), fac, "NOT");
+			} else {
+				throw new ParserException("NOTing non-bool");
+			}
 		} else {
 			error("Factor error: " + peak.getText(), peak.getStart());
 		}
@@ -477,8 +519,8 @@ public class Parser {
 					throw new ParserException("Assignment between two different types");
 				}
 			} else { // Binary or Number ie INTEGER
- 				if (! (((Location) exp).getType() instanceof Integer)) {
- 					throw new ParserException("Assigning Integer to non-integer");
+				if (exp.getType() != e.getType()) {
+ 					throw new ParserException("Assigning incompatible types");
  				}
 			}
 			return new Assign(((Location) exp), e);
@@ -496,7 +538,10 @@ public class Parser {
 		this.obs.add("If");
 		this.obs.decend();
 		this.hardMatch("IF");
-		Condition c = this.condition();
+		Expression c = this.expression();
+		if (! (c.getType() instanceof Bool)) {
+			throw new ParserException("Condition must evaluate to bool");
+		}
 		toReturn.setCondition(c);
 		this.hardMatch("THEN");
 		Instruction ifTrue = this.instructions();
@@ -504,7 +549,10 @@ public class Parser {
 		Instruction ifFalse = null;
 		while (this.peak().getText().equals("ELSEIF")) {
 			this.hardMatch("ELSEIF");
-			Condition con = this.condition();
+			Expression con = this.expression();
+			if (! (con.getType() instanceof Bool)) {
+				throw new ParserException("Condition must evaluate to bool");
+			}
 			this.hardMatch("THEN");
 			Instruction lines = this.instructions();
 			current.setIfFalse(new If(con, lines));
@@ -523,26 +571,26 @@ public class Parser {
 	/**
 	 * Confirms the Condition Non-terminal.
 	 */
-	private Condition condition() {
-		this.obs.add("Condition");
-		this.obs.decend();
-		Expression left = this.expression();
-		String next = this.peak().getText();
-		if (next.equals("=") || next.equals("#") 
-				|| next.equals("<") || next.equals(">") 
-				|| next.equals("<=") || next.equals(">=")) {
-			this.obs.add(this.next());
-		} else {
-			error("Operator expected in condition", this.peak().getStart());
-		}
-		Expression right = this.expression();
-		this.obs.accend();
-		if (isArithmeticable(left) && isArithmeticable(right)) {
-			return new Condition(left, right, next);
-		} else {
-			throw new ParserException("condition: comparing non-integers");
-		}
-	}
+//	private Condition condition() {
+//		this.obs.add("Condition");
+//		this.obs.decend();
+//		Expression left = this.expression();
+//		String next = this.peak().getText();
+//		if (next.equals("=") || next.equals("#") 
+//				|| next.equals("<") || next.equals(">") 
+//				|| next.equals("<=") || next.equals(">=")) {
+//			this.obs.add(this.next());
+//		} else {
+//			error("Operator expected in condition", this.peak().getStart());
+//		}
+//		Expression right = this.expression();
+//		this.obs.accend();
+//		if (isArithmeticable(left) && isArithmeticable(right)) {
+//			return new Condition(left, right, next);
+//		} else {
+//			throw new ParserException("condition: comparing non-integers");
+//		}
+//	}
 	
 	/**
 	 * Confirms the Repeat Non-terminal.
@@ -553,7 +601,10 @@ public class Parser {
 		this.hardMatch("REPEAT");
 		Instruction i = this.instructions();
 		this.hardMatch("UNTIL");
-		Condition c = this.condition();
+		Expression c = this.expression();
+		if (! (c.getType() instanceof Bool)) {
+			throw new ParserException("Condition must evaluate to bool");
+		}
 		this.hardMatch("END");
 		this.obs.accend();
 		return new Repeat(c, i);
@@ -566,7 +617,10 @@ public class Parser {
 		this.obs.add("While");
 		this.obs.decend();
 		this.hardMatch("WHILE");
-		Condition c = this.condition();
+		Expression c = this.expression();
+		if (! (c.getType() instanceof Bool)) {
+			throw new ParserException("Condition must evaluate to bool");
+		}
 		this.hardMatch("DO");
 		Instruction i = this.instructions();
 		this.hardMatch("END");
@@ -787,6 +841,10 @@ public class Parser {
 	
 	public Scope getST() {
 		return this.current;
+	}
+	
+	private boolean isRelOp(String s) {
+		return s.equals("=") || s.equals(">") || s.equals("<") || s.equals("<=") || s.equals(">=") || s.equals("#");
 	}
 	
 	/**
