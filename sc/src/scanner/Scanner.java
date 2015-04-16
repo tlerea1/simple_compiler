@@ -234,6 +234,7 @@ public class Scanner {
 		this.keywords.add("DO");
 		this.keywords.add("WRITE");
 		this.keywords.add("READ");
+		this.keywords.add("ELSEIF");
 	}
 	
 	private void initSymbols() {

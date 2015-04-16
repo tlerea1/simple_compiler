@@ -491,20 +491,33 @@ public class Parser {
 	 * Confirms the If Non-terminal.
 	 */
 	private If if1() {
+		If toReturn = new If(null, null);
+		If current = toReturn;
 		this.obs.add("If");
 		this.obs.decend();
 		this.hardMatch("IF");
 		Condition c = this.condition();
+		toReturn.setCondition(c);
 		this.hardMatch("THEN");
 		Instruction ifTrue = this.instructions();
+		toReturn.setIfTrue(ifTrue);
 		Instruction ifFalse = null;
+		while (this.peak().getText().equals("ELSEIF")) {
+			this.hardMatch("ELSEIF");
+			Condition con = this.condition();
+			this.hardMatch("THEN");
+			Instruction lines = this.instructions();
+			current.setIfFalse(new If(con, lines));
+			current = (If) current.getIfFalse();
+		}
 		if (this.peak().getText().equals("ELSE")) {
 			this.hardMatch("ELSE");
 			ifFalse = this.instructions();
 		}
+		current.setIfFalse(ifFalse);
 		this.hardMatch("END");
 		this.obs.accend();
-		return new If(c, ifTrue, ifFalse);
+		return toReturn;
 	}
 	
 	/**
