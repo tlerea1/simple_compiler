@@ -42,7 +42,7 @@ public class Number extends Expression {
 	@Override
 	public Expression getOpposite() {
 		if (this.getType() instanceof Bool) {
-			return new Number(new Constant(~this.num.getValue(), Singleton.getBool()));
+			return new Number(new Constant(-1 * (this.num.getValue()-1), Singleton.getBool()));
 		} else {
 			throw new RuntimeException("Cannot invert non-boolean");
 		}

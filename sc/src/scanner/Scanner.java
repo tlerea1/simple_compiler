@@ -238,6 +238,8 @@ public class Scanner {
 		this.keywords.add("AND");
 		this.keywords.add("OR");
 		this.keywords.add("NOT");
+		this.keywords.add("PROCEDURE");
+		this.keywords.add("RETURN");
 	}
 	
 	private void initSymbols() {

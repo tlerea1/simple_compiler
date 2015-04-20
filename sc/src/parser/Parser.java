@@ -12,6 +12,7 @@ import parser.ast.Index;
 import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Number;
+import parser.ast.ProcedureCall;
 import parser.ast.Read;
 import parser.ast.RelBinary;
 import parser.ast.Repeat;
@@ -20,7 +21,9 @@ import parser.symbolTable.Array;
 import parser.symbolTable.Bool;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
+import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
+import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
@@ -168,6 +171,32 @@ public class Parser {
 	}
 	
 	/**
+	 * Function to add new Formal Variable to the current scope.
+	 * @param identifier the identifier
+	 * @param type the type
+	 */
+	private void addFormalVariable(String identifier, Type type) {
+		if (! this.current.local(identifier)) { // Check for already defined
+			this.current.insert(identifier, new FormalVariable(type));
+		} else {
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+		}
+	}
+	
+	/**
+	 * Function to add new Variable to the current scope.
+	 * @param identifier the identifier
+	 * @param type the type
+	 */
+	private void addProcedure(String identifier, Procedure p) {
+		if (! this.current.local(identifier)) { // Check for already defined
+			this.current.insert(identifier, p);
+		} else {
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+		}
+	}
+	
+	/**
 	 * Function to add Type to the current scope.
 	 * @param identifier the identifier
 	 * @param type the type
@@ -189,7 +218,8 @@ public class Parser {
 		Token next;
 		while (this.peak().getText().equals("VAR") 
 				|| this.peak().getText().equals("CONST") 
-				|| this.peak().getText().equals("TYPE")) {
+				|| this.peak().getText().equals("TYPE")
+				|| this.peak().getText().equals("PROCEDURE")) {
 			next = this.peak();
 			if (next.getText().equals("CONST")) {
 				constDecl();
@@ -197,6 +227,8 @@ public class Parser {
 				varDecl();
 			} else if (next.getText().equals("TYPE")) {
 				typeDecl();
+			} else if (next.getText().equals("PROCEDURE")) {
+				procDecl();
 			}
 		}
 		this.obs.accend();
@@ -217,7 +249,11 @@ public class Parser {
 			if (exp instanceof Number) {
 				int value = ((Number) exp).getNum().getValue();
 				this.hardMatch(";");
-				addConstant(identifier, value);
+				if (! this.current.local(identifier)) { // Check for already defined
+					this.current.insert(identifier, new Constant(value, exp.getType()));
+				} else {
+					throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+				}
 			} else {
 				throw new ParserException("constDecl: expression does not fold to number");
 			}
@@ -259,6 +295,77 @@ public class Parser {
 			addType(identifier, t);
 		}
 		this.obs.accend();
+	}
+	
+	private List<Formal> formals() {
+		ArrayList<Formal> toRet = new ArrayList<Formal>();
+		
+		toRet.addAll(this.formal());
+		while (this.peak().getText().equals(";")) {
+			this.hardMatch(";");
+			toRet.addAll(this.formal());
+		}
+		return toRet;
+	}
+	
+	private List<Formal> formal() {
+		ArrayList<Formal> toRet = new ArrayList<Formal>();
+		Collection<String> idents = this.identifierList();
+		this.hardMatch(":");
+		Type type = this.type();
+		for (String s : idents) {
+			toRet.add(new Formal(s, type));
+		}
+		return toRet;
+	}
+	
+	private void procDecl() {
+		Type retType = null;
+		Instruction inst = null;
+		Scope scope = new Scope(this.current);
+		List<Formal> formalList = null;
+		this.current = scope;
+		Expression ret = null;
+		this.hardMatch("PROCEDURE");
+		String ident = this.matchIdent();
+		this.hardMatch("(");
+		if (! this.peak().getText().equals(")")) {
+			List<Formal> formals = this.formals();
+			for (Formal f : formals) {
+				this.addFormalVariable(f.getIdent(), f.getType());
+			}
+			formalList = formals;
+		}
+		this.hardMatch(")");
+		if (this.peak().getText().equals(":")) {
+			this.hardMatch(":");
+			retType = this.type();
+		}
+		this.hardMatch(";");
+		while (this.peak().getText().equals("VAR")) {
+			this.varDecl();
+		}
+		if (this.peak().getText().equals("BEGIN")) {
+			this.hardMatch("BEGIN");
+			inst = instructions();
+		}
+		if (this.peak().getText().equals("RETURN")) {
+			this.hardMatch("RETURN");
+			if (retType == null) {
+				throw new ParserException("Procedure returning without specified return type");
+			}
+			ret = expression();
+			if (ret.getType() != retType) {
+				throw new ParserException("Returning expression of different than specified type");
+			}
+		}
+		this.hardMatch("END");
+		if (! ident.equals(this.next().getText())) {
+			throw new ParserException("Starting and ending proc identifiers must match");
+		}
+		this.hardMatch(";");
+		this.current = this.current.getOuter();
+		this.addProcedure(ident, new Procedure(scope, inst, ret, formalList));
 	}
 	
 	/**
@@ -483,7 +590,11 @@ public class Parser {
 		this.obs.add("Instruction");
 		this.obs.decend();
 		if (this.peak().getType() == TokenType.IDENTIFIER) {
-			toReturn = this.assign();
+			if (this.current.find(this.peak().getText()) instanceof Procedure) {
+				toReturn = this.procCall();
+			} else {
+				toReturn = this.assign();
+			}
 		} else if (this.peak().getText().equals("IF")) {
 			toReturn = this.if1();
 		} else if (this.peak().getText().equals("REPEAT")) {
@@ -499,6 +610,19 @@ public class Parser {
 		}
 		this.obs.accend();
 		return toReturn;
+	}
+	
+	private ProcedureCall procCall() {
+		String ident = this.matchIdent();
+		this.hardMatch("(");
+		List<Expression> exps = this.expressionList();
+		this.hardMatch(")");
+		Procedure p = (Procedure) this.current.find(ident);
+		if (p.match(exps)) {
+			return new ProcedureCall(ident, exps);
+		} else {
+			throw new ParserException("No Procedure with matching formals");
+		}
 	}
 	
 	/**
@@ -683,7 +807,7 @@ public class Parser {
 			Constant c = ((Constant) e);
 			toReturn = new Number(c);
 		} else {
-			throw new ParserException("Designator found refernce to Type identifier");
+			throw new ParserException("Designator found refernce to Type identifier or didnt find identifier");
 		}
 
 		this.obs.accend();
@@ -704,6 +828,11 @@ public class Parser {
 				}
 				this.hardMatch("[");
 				Collection<Expression> indecies = this.expressionList();
+				for (Expression e : indecies) {
+					if (e.getType() != Singleton.getInteger()) {
+						throw new ParserException("Selecting with non-integer");
+					}
+				}
 				this.hardMatch("]");
 				for (parser.ast.Expression i : indecies) {
 					Index inx = new Index(current, i);
@@ -759,24 +888,24 @@ public class Parser {
 	/**
 	 * Confirms the ExpressionList Non-terminal.
 	 */
-	private Collection<parser.ast.Expression> expressionList() {
+	private List<parser.ast.Expression> expressionList() {
 		this.obs.add("ExpressionList");
 		this.obs.decend();
-		Collection<Expression> expressions = new ArrayList<Expression>();
+		List<Expression> expressions = new ArrayList<Expression>();
 		Expression toAdd = this.expression();
-		if (isArithmeticable(toAdd)) {
+//		if (isArithmeticable(toAdd)) {
 			expressions.add(toAdd);
-		} else {
-			throw new ParserException("expressionList: adding non-number");
-		}
+//		} else {
+//			throw new ParserException("expressionList: adding non-number");
+//		}
 		while (this.peak().getText().equals(",")) {
 			this.hardMatch(",");
 			toAdd = this.expression();
-			if (isArithmeticable(toAdd)) {
+//			if (isArithmeticable(toAdd)) {
 				expressions.add(toAdd);
-			} else {
-				throw new ParserException("expressionList: adding non-number");
-			}
+//			} else {
+//				throw new ParserException("expressionList: adding non-number");
+//			}
 		}
 		this.obs.accend();
 		return expressions;
@@ -785,10 +914,10 @@ public class Parser {
 	/**
 	 * Confirms the IdentifierList Non-terminal.
 	 */
-	private Collection<String> identifierList() {
+	private List<String> identifierList() {
 		this.obs.add("IdentifierList");
 		this.obs.decend();
-		Collection<String> identifiers = new ArrayList<String>();
+		List<String> identifiers = new ArrayList<String>();
 		identifiers.add(this.matchIdent());
 		while (this.peak().getText().equals(",")) {
 			this.hardMatch(",");
