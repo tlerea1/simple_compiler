@@ -6,22 +6,26 @@ import interpreter.environment.Environment;
 import interpreter.environment.IntegerBox;
 import interpreter.environment.RecordBox;
 
+import java.util.List;
 import java.util.Scanner;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
 import parser.ast.Expression;
 import parser.ast.Field;
+import parser.ast.FunctionCall;
 import parser.ast.If;
 import parser.ast.Index;
 import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Number;
+import parser.ast.ProcedureCall;
 import parser.ast.Read;
 import parser.ast.Repeat;
 import parser.ast.Variable;
 import parser.ast.Write;
 import parser.symbolTable.Constant;
+import parser.symbolTable.Procedure;
 import parser.symbolTable.Scope;
 import util.Singleton;
 
@@ -67,6 +71,8 @@ public class Interpreter {
 				this.Interpret((Read) current);
 			} else if (current instanceof Write) {
 				this.Interpret((Write) current);
+			} else if (current instanceof ProcedureCall) {
+				this.Interpret((ProcedureCall) current);
 			} else {
 				throw new InterpreterException("interpreter: Found unknown instruction type");
 			}
@@ -134,6 +140,30 @@ public class Interpreter {
 		}
 	}
 	
+
+	
+	private void fillEnvironment(Procedure p, Environment e, List<Expression> actuals) {
+		for (int i=0;i<actuals.size();i++) {
+			if (Singleton.isValueType(p.getFormals().get(i).getType())) {
+				IntegerBox b = (IntegerBox) e.get(p.getFormals().get(i).getIdent()); // Right now all value types are integer boxs
+				b.setValue((((Number) this.evaluate(actuals.get(i))).getNum().getValue()));
+			} else {
+				e.put(p.getFormals().get(i).getIdent(), this.evaluate((Location) actuals.get(i)));
+			}
+		}
+	}
+	
+	private void Interpret(ProcedureCall proc) {
+		Procedure p = ((Procedure) this.st.find(proc.getFunction()));
+		Environment e = p.getEnvironment();
+		this.fillEnvironment(p,e, proc.getActuals());
+		e.setOuter(this.environment);
+		this.environment = e;
+		this.Interpret(p.getBody());
+		this.environment = this.environment.getOuter();
+		
+	}
+	
 	private Box evaluate(Location loc) { // Runs correct evaluate function for locations
 		if (loc instanceof Field) {
 			return evaluate((Field) loc);
@@ -183,6 +213,9 @@ public class Interpreter {
 			return new Number(new Constant(evaluate((Binary) exp), exp.getType()));
 		} else if (exp instanceof Number) { // returns the number
 			return exp;
+		} else if (exp instanceof FunctionCall ) {
+			return evaluate((FunctionCall) exp);
+		
 		} else {
 			throw new InterpreterException("unknown Expression type");
 		}
@@ -245,6 +278,17 @@ public class Interpreter {
 			default:
 				throw new InterpreterException("unknown operator in binary");
 		}
+	}
+	
+	private Expression evaluate(FunctionCall func) {
+		Environment e = func.getProcedure().getEnvironment();
+		this.fillEnvironment(func.getProcedure(),e, func.getActuals());
+		e.setOuter(this.environment);
+		this.environment = e;
+		this.Interpret(func.getProcedure().getBody());
+		Expression exp = this.evaluate(func.getProcedure().getRet());
+		this.environment = this.environment.getOuter();
+		return exp;
 	}
 	
 	private int boolToInt(boolean b) {

@@ -1,10 +1,13 @@
 package parser.symbolTable;
 
+import interpreter.environment.Environment;
+
 import java.util.List;
 
 import parser.Formal;
 import parser.ast.Expression;
 import parser.ast.Instruction;
+import visitor.Visitor;
 
 public class Procedure extends Entry {
 	
@@ -12,19 +15,30 @@ public class Procedure extends Entry {
 	private Instruction body;
 	private Expression ret;
 	private List<Formal> formals;
+	private Type returnType;
 	
+	public List<Formal> getFormals() {
+		return formals;
+	}
+
+	public void setFormals(List<Formal> formals) {
+		this.formals = formals;
+	}
+
 	public Procedure() {
 		this.scope = new Scope(null);
 		this.body = null;
 		this.ret = null;
 		this.formals = null;
+		this.returnType = null;
 	}
 	
-	public Procedure(Scope scope, Instruction body, Expression returnVal, List<Formal> formals) {
+	public Procedure(Scope scope, Instruction body, Expression returnVal, List<Formal> formals, Type type) {
 		this.scope = scope;
 		this.body = body;
 		this.ret = returnVal;
 		this.formals = formals;
+		this.returnType = type;
 	}
 
 	public Scope getScope() {
@@ -61,6 +75,26 @@ public class Procedure extends Entry {
 			}
 		}
 		return true;
+	}
+	
+	public Environment getEnvironment() {
+		return this.scope.getEnvironment();
+	}
+	
+	public Type getType() {
+		return this.returnType;
+	}
+	
+	public void accept(Visitor v) {
+		v.visit(this);
+	}
+	
+	public int size() {
+		int size = this.scope.size();
+		for (Formal f : this.formals) {
+			size -= f.getType().size();
+		}
+		return size;
 	}
 	
 }

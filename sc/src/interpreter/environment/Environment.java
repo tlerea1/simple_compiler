@@ -9,21 +9,48 @@ import java.util.Map;
  */
 public class Environment {
 	private HashMap<String, Box> environment;
+	private Environment outer;
 	
 	/**
 	 * Standard Environment Constructor.
 	 */
 	public Environment() {
 		this.environment = new HashMap<String, Box>();
+		this.outer = null;
 	}
 	
+	
+	public HashMap<String, Box> getEnvironment() {
+		return environment;
+	}
+
+
+	public void setEnvironment(HashMap<String, Box> environment) {
+		this.environment = environment;
+	}
+
+
+	public Environment getOuter() {
+		return outer;
+	}
+
+
+	public void setOuter(Environment outer) {
+		this.outer = outer;
+	}
+
+
 	/**
 	 * Gets the value for the given key.
 	 * @param identifier the key
 	 * @return the value, null if no mapping
 	 */
 	public Box get(String identifier) {
-		return this.environment.get(identifier);
+		Box b = this.environment.get(identifier);
+		if (b == null && this.outer != null) {
+			return this.outer.get(identifier);
+		}
+		return b;
 	}
 	
 	/**

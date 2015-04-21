@@ -5,16 +5,20 @@ import parser.ast.Assign;
 import parser.ast.Binary;
 import parser.ast.Expression;
 import parser.ast.Field;
+import parser.ast.FunctionCall;
 import parser.ast.If;
 import parser.ast.Index;
 import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Node;
 import parser.ast.Number;
+import parser.ast.ProcedureCall;
 import parser.ast.Read;
 import parser.ast.Repeat;
 import parser.ast.Variable;
 import parser.ast.Write;
+import parser.symbolTable.FormalVariable;
+import parser.symbolTable.LocalVariable;
 
 public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 	
@@ -186,6 +190,30 @@ public class PlainASTVisitor extends PlainVisitor implements ASTVisitor  {
 		this.indent();
 		f.getVar().accept(this);
 		this.dedent();
+		return 0;
+	}
+
+	@Override
+	public void visit(FormalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visit(LocalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int visit(ProcedureCall proc) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int visit(FunctionCall func) {
+		// TODO Auto-generated method stub
 		return 0;
 	}
 

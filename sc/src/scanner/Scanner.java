@@ -105,7 +105,11 @@ public class Scanner {
 			building.setType(TokenType.NUMBER); // Return NUMBER token
 			building.setEnd(this.file_position);
 			building.setText(tokenText);
-			building.setVal(java.lang.Integer.parseInt(tokenText));
+			try {
+				building.setVal(java.lang.Integer.parseInt(tokenText));
+			} catch (NumberFormatException e) {
+				throw new ScannerException("Using too large an integer!");
+			}
 		} else if (isLetter(c)) {
 			tokenText += (char) c;
 			while (isDigit(this.peak()) || isLetter(this.peak())) { // Continue while Letters or digits

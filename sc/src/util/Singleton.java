@@ -2,6 +2,7 @@ package util;
 
 import parser.symbolTable.Bool;
 import parser.symbolTable.Integer;
+import parser.symbolTable.Type;
 
 public class Singleton {
 	private static Integer integer;
@@ -19,5 +20,12 @@ public class Singleton {
 			bool = new Bool();
 		}
 		return bool;
+	}
+	
+	public static boolean isValueType(Type t) {
+		if (t instanceof Integer || t instanceof Bool) {
+			return true;
+		}
+		return false;
 	}
 }

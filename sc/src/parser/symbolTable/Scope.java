@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import amd64.CodeGen;
 import visitor.Visitor;
 
 /**
@@ -17,7 +18,7 @@ import visitor.Visitor;
 public class Scope {
 	private Scope outer;
 	private HashMap<String, Entry> table;
-	private int offset;
+	private int offset, formalOffset;
 	
 	/**
 	 * Constructor for a Scope. 
@@ -26,7 +27,8 @@ public class Scope {
 	public Scope(Scope outer) {
 		this.outer = outer;
 		this.table = new HashMap<String, Entry>();
-		this.offset = -4;
+		this.offset = -CodeGen.SIZEOF_INT;
+		this.formalOffset = 2*CodeGen.SIZEOF_INT;
 	}
 	
 	/**
@@ -36,6 +38,13 @@ public class Scope {
 	 * @return the value inserted
 	 */
 	public Entry insert(String identifier, Entry value) {
+		if (value instanceof FormalVariable) {
+			((FormalVariable) value).setLocation(this.formalOffset);
+			this.formalOffset += CodeGen.SIZEOF_INT;
+		} else if (value instanceof Variable) {
+			((Variable) value).setLocation(this.offset);
+			this.offset -= ((Variable) value).getType().size();
+		}
 		return this.table.put(identifier, value);
 	}
 	

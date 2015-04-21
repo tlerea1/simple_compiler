@@ -1,157 +1,75 @@
-/* A quick and dirty implementation of Conway's Game of Life in SIMPLE. To
-   use, first run the program. The first number you type sets the number of
-   rows, m. The second number you type sets the number of columns, n. After
-   that, enter m digit strings of length n (one for each row) made up of 0s
-   and 1s preceeded by any non-zero digit (because the interpreter reads
-   integers, not strings, so 0101 will be incorrectly read as 101). The digit
-   1 corresponds to an alive cell, and the digit 0 corresponds to a dead cell.
+PROGRAM X;
 
-   After the initialization input, typing anything will advance and display
-   the next iteration of Conway's game of life. Typing 1337 will exit the
-   program. Here is an example input for the classic R-pentomino:
+CONST len=5;
+TYPE array=ARRAY len OF INTEGER;
+VAR int : INTEGER;
+PROCEDURE fib(n : INTEGER) : INTEGER;
+    VAR ret:INTEGER;
+    BEGIN
 
-      5
-      5
-      700000
-      700110
-      701100
-      700100
-      700000
+    IF n = 0 THEN
+        ret := 0
+    ELSEIF n = 1 THEN
+        ret := 1
+    ELSE
+        ret := fib(n-2) + fib (n-1)
+    END
 
-   Note: This will only work for board sizes over 9x9 if your SIMPLE
-   implementation supports arbitrary precision integers. Sometimes the program
-   divides by 0 to abort the program on invalid input. This is similar to
-   sys.exit(1).
-*/
+    RETURN ret
+END fib;
 
-PROGRAM Conway;
-  TYPE int = INTEGER;
-  TYPE row = ARRAY 100 OF int;
-  TYPE grid = ARRAY 100 OF row;
+PROCEDURE copy(a,b:array);
+    VAR i : INTEGER;
+    BEGIN
 
-  VAR currgrid, nextgrid : grid;
-  VAR rows, columns : int;
-  VAR iteration, x, y, x2, y2 : int;
+    WHILE i < len DO
+        WRITE i;
+        b[i] := a[i];
+        i := i + 1
+    END
 
-  /* This variable is set to 0 so we can divide by it and abort program. */
-  VAR exit : int;
+END copy;
 
-  /* Misc. variables */
-  VAR counter, total, current, temp, neighbors : int;
+PROCEDURE set(a :array);
+    VAR i : INTEGER;
+
+    BEGIN
+
+    WHILE i < len DO
+        WRITE i;
+        a[i] := i;
+        i := i + 1
+    END
+
+END set;
+
+PROCEDURE print(a,b:INTEGER);
+	BEGIN
+
+	WRITE a;
+	WRITE b
+END print;
+
+PROCEDURE globalTest();
+	BEGIN
+
+	WRITE int
+END globalTest;
+
+VAR x : INTEGER;
+VAR a,b : array;
 
 BEGIN
-  /* Get number of rows and columns */
-  READ rows;
-  READ columns;
 
-  /* Read in the rows */
-  total := 1;
-  WHILE x < rows DO
-    READ current;
-    /* Get a row and verify its length */
-    WHILE counter < columns DO
-      counter := counter + 1;
-      total := total * 10
-    END;
-    IF current < total THEN
-      /* Invalid input so abort the program */
-      exit := 0 DIV exit
-    END;
-    IF current >= (total * 10) THEN
-      /* Invalid input so abort the program */
-      exit := 0 DIV exit
-    END;
 
-    /* Test that the row is made up of 0s and 1s and feed into array */
-    temp := current;
-    y := columns - 1;
-    WHILE y >= 0 DO
-      /* Check if the first digit is 0 or 1 */
-      IF (temp MOD 10) > 1 THEN
-        exit := 0 DIV exit
-      END;
+set(a);
+copy(a,b);
+WRITE(b[4]);
+print(7,8);
+int := 167;
+globalTest()
 
-      currgrid[y][x] := temp MOD 10;
-      temp := (temp - (temp MOD 10)) DIV 10; /* Shift the number right */
-      y := y - 1
-    END;
-    total := 1;
-    counter := 0;
-    x := x + 1
-  END;
 
-  /* Perform an iteration of Conway */
-  WHILE temp # 1337 DO
-    WRITE iteration;
-    /* Print the grid */
-    x := 0;
-    WHILE x < rows DO
-      /* Prepend everything with 7 so leading 0s show */
-      total := 7;
-      y := 0;
-      WHILE y < columns DO
-        total := (total * 10) + currgrid[y][x];
-        y := y + 1
-      END;
-      WRITE total;
-      x := x + 1
-    END;
 
-    /* Update grid with Conway rules onto temporary grid */
-    x := 0;
-    WHILE x < rows DO
-      y := 0;
-      WHILE y < columns DO
-        /* Get number of neighbors */
-        neighbors := currgrid[y][x] * (-1);
-        x2 := -1;
-        WHILE x2 <= 1 DO
-          y2 := -1;
-          WHILE y2 <= 1 DO
-            IF (x + x2) >= 0 THEN IF (x + x2) < rows THEN IF (y + y2) >= 0
-            THEN IF (y + y2) < columns THEN IF currgrid[y + y2][x + x2] = 1
-            THEN
-              neighbors := neighbors + 1
-            END END END END END;
-            y2 := y2 + 1
-          END;
-          x2 := x2 + 1
-        END;
 
-        /* Test Conway rules */
-        IF currgrid[y][x] = 1 THEN
-          IF neighbors < 2 THEN
-            nextgrid[y][x] := 0
-          ELSE
-            IF neighbors > 3 THEN
-              nextgrid[y][x] := 0
-            ELSE
-              nextgrid[y][x] := 1
-            END
-          END
-        ELSE
-          IF neighbors = 3 THEN
-            nextgrid[y][x] := 1
-          ELSE
-            nextgrid[y][x] := 0
-          END
-        END;
-        y := y + 1
-      END;
-      x := x + 1
-    END;
-
-    /* Swap the grid buffers */
-    x := 0;
-    WHILE x < rows DO
-      y := 0;
-      WHILE y < columns DO
-        currgrid[y][x] := nextgrid[y][x];
-        y := y + 1
-      END;
-      x := x + 1
-    END;
-    iteration := iteration + 1;
-    READ temp
-  END
-END Conway.
+END X.

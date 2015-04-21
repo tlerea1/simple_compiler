@@ -4,6 +4,28 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW8:
+
+For this assignment I added else if, booleans, and procedures. Else if was the simple
+change. Booleans required adding a new type. Booleans in my implementation are essentially
+typedef'd ints. They have a value of 1 for true, and 0 for false. TRUE and FALSE are just
+declared as global constants in the universe scope. A new type of binary was added, a relational
+binary, this enabled the getOpposite function for transforming whiles into repeats. The code generator
+changed to include booleans as well. Now all expressions get evaluated, and then in the case where
+the expression was a condition the value of the result of the expression is checked. For relational
+binaries conditional moves are used to make the result 0 or 1. 
+
+The hard part of this assignment was the code generator for the functions. Below is how the 
+stack frames / calling convension is laid out. All of the program scope variables live on the
+stack in the main function stack frame. A global pointer called _globals is assigned the main
+stack frame base pointer. This enables all functions to easily access these globals. Arguments
+of functions are pushed on the stack in reverse order, and all have offsets from the base pointer
+of the called function starting at +16 to leave room for the pushed bp and return address. Local
+variables of functions live below that function's base pointer. This is all pretty standard for 
+gcc x86. Of course all INTEGERs / BOOLEANs get alloted the full 64 bits (8 bytes). The return values
+of functions are put into %rax. This is then generally pushed though in later version of the code
+generator will not be.
+
 HW7:
 
 For this assignment I implemented the code generator for AMD64. Awkwardly,

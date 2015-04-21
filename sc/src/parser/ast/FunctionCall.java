@@ -4,6 +4,7 @@ import java.util.List;
 
 import parser.symbolTable.Procedure;
 import parser.symbolTable.Type;
+import visitor.ASTVisitor;
 
 public class FunctionCall extends Expression {
 
@@ -19,12 +20,12 @@ public class FunctionCall extends Expression {
 	
 	@Override
 	public Expression fold() {
-		return this.proc.getRet().fold();
+		return this;
 	}
 
 	@Override
 	public Type getType() {
-		return proc.getRet().getType();
+		return proc.getType();
 	}
 
 	@Override
@@ -48,4 +49,12 @@ public class FunctionCall extends Expression {
 		this.ident = ident;
 	}
 
+	public Procedure getProcedure() {
+		return this.proc;
+	}
+	
+	public int accept(ASTVisitor v) {
+		return v.visit(this);
+	}
+	
 }

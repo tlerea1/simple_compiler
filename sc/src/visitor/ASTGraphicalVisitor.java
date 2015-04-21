@@ -7,14 +7,18 @@ import parser.ast.Assign;
 import parser.ast.Binary;
 import parser.ast.Expression;
 import parser.ast.Field;
+import parser.ast.FunctionCall;
 import parser.ast.If;
 import parser.ast.Index;
 import parser.ast.Instruction;
 import parser.ast.Location;
 import parser.ast.Node;
+import parser.ast.ProcedureCall;
 import parser.ast.Read;
 import parser.ast.Repeat;
 import parser.ast.Write;
+import parser.symbolTable.FormalVariable;
+import parser.symbolTable.LocalVariable;
 
 public class ASTGraphicalVisitor extends GraphicalVisitor implements
 		ASTVisitor {
@@ -200,6 +204,30 @@ public class ASTGraphicalVisitor extends GraphicalVisitor implements
 		this.data += "label" + (++this.current) + " [label=\"" + n.getNum().getValue() + "\",shape=diamond];\n";
 		this.data += "label" + current + " -> label" + (current+1) + " [label=\"ST\"];\n";
 		return current;
+	}
+
+	@Override
+	public void visit(FormalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visit(LocalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int visit(ProcedureCall proc) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int visit(FunctionCall func) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

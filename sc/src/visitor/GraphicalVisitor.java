@@ -6,7 +6,10 @@ import java.util.SortedSet;
 import parser.symbolTable.Array;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
+import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
+import parser.symbolTable.LocalVariable;
+import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Variable;
@@ -97,6 +100,24 @@ public class GraphicalVisitor implements Visitor {
 	
 	public String toString() {
 		return "digraph X {\n" + this.data + "}\n";
+	}
+
+	@Override
+	public void visit(FormalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visit(LocalVariable var) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void visit(Procedure p) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

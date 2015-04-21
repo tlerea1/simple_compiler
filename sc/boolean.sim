@@ -1,0 +1,31 @@
+PROGRAM boolean;
+	VAR a,b : INTEGER;
+
+	BEGIN
+		a := 3;
+		b := 4;
+
+		IF a < b THEN
+			WRITE 0
+		END;
+
+		IF a > b THEN
+			WRITE 1
+		END;
+
+		IF a = b THEN
+			WRITE 2
+		END;
+
+		IF a # b THEN
+			WRITE 3
+		END;
+
+		IF a <= b THEN
+			WRITE 4
+		END;
+
+		IF a >= b THEN
+			WRITE 5
+		END
+END boolean.

@@ -7,6 +7,7 @@ import parser.ast.Assign;
 import parser.ast.Binary;
 import parser.ast.Expression;
 import parser.ast.Field;
+import parser.ast.FunctionCall;
 import parser.ast.If;
 import parser.ast.Index;
 import parser.ast.Instruction;
@@ -23,6 +24,7 @@ import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
+import parser.symbolTable.LocalVariable;
 import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
@@ -183,6 +185,14 @@ public class Parser {
 		}
 	}
 	
+	private void addLocalVariable(String identifier, Type type) {
+		if (! this.current.local(identifier)) { // Check for already defined
+			this.current.insert(identifier, new LocalVariable(type));
+		} else {
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+		}
+	}
+	
 	/**
 	 * Function to add new Variable to the current scope.
 	 * @param identifier the identifier
@@ -280,6 +290,22 @@ public class Parser {
 		this.obs.accend();
 	}
 	
+	private void varDecl(int i) {
+		this.obs.add("VarDecl");
+		this.obs.decend();
+		this.obs.add(this.next());
+		while (this.peak().getType() == TokenType.IDENTIFIER) {
+			Collection<String> identifiers = this.identifierList();
+			this.hardMatch(":");
+			Type t = this.type();
+			this.hardMatch(";");
+			for (String s : identifiers) {
+				addLocalVariable(s, t);
+			}
+		}
+		this.obs.accend();
+	}
+	
 	/**
 	 * Confirms the TypeDecl Non-terminal.
 	 */
@@ -323,7 +349,7 @@ public class Parser {
 		Type retType = null;
 		Instruction inst = null;
 		Scope scope = new Scope(this.current);
-		List<Formal> formalList = null;
+		List<Formal> formalList = new ArrayList<Formal>();
 		this.current = scope;
 		Expression ret = null;
 		this.hardMatch("PROCEDURE");
@@ -340,10 +366,16 @@ public class Parser {
 		if (this.peak().getText().equals(":")) {
 			this.hardMatch(":");
 			retType = this.type();
+			if (! Singleton.isValueType(retType)) {
+				throw new ParserException("Must return INTEGER or BOOLEAN");
+			}
 		}
 		this.hardMatch(";");
+		this.current = this.current.getOuter();
+		addProcedure(ident, new Procedure(scope, inst, ret, formalList, retType));
+		this.current = scope;
 		while (this.peak().getText().equals("VAR")) {
-			this.varDecl();
+			this.varDecl(1);
 		}
 		if (this.peak().getText().equals("BEGIN")) {
 			this.hardMatch("BEGIN");
@@ -365,7 +397,10 @@ public class Parser {
 		}
 		this.hardMatch(";");
 		this.current = this.current.getOuter();
-		this.addProcedure(ident, new Procedure(scope, inst, ret, formalList));
+		Procedure p = (Procedure) this.current.find(ident);
+		p.setBody(inst);
+		p.setRet(ret);
+		p.setScope(scope);
 	}
 	
 	/**
@@ -431,15 +466,7 @@ public class Parser {
 	 * @return true if can evaluate to integer
 	 */
 	private boolean isArithmeticable(Expression e) {
-		if (e instanceof Number) {
-			return true;
-		} else if (e instanceof Location) {
-			Type t = ((Location) e).getType();
-			return t instanceof Integer || t instanceof Bool;
-		} else if (e instanceof Binary) {
-			return true;
-		}
-		return false;
+		return Singleton.isValueType(e.getType());
 	}
 	
 	private Expression expression() {
@@ -454,7 +481,7 @@ public class Parser {
 				throw new ParserException("Cannot relate different types");
 			}
 		}
-		return left; // TODO Context conditions!!
+		return left;
 	}
 	
 	/**
@@ -549,7 +576,11 @@ public class Parser {
 			exp = this.expression();
 			this.hardMatch(")");
 		} else if (peak.getType() == TokenType.IDENTIFIER) {
-			exp = this.designator();
+			if (this.current.find(peak.getText()) instanceof Procedure) {
+				exp = this.funcCall();
+			} else {
+				exp = this.designator();
+			}
 		} else if (peak.getText().equals("NOT")) {
 			this.next();
 			Expression fac = this.factor();
@@ -564,6 +595,24 @@ public class Parser {
 		this.obs.accend();
 		return exp;
 	}
+	
+	private FunctionCall funcCall() {
+		String ident = this.matchIdent();
+		this.hardMatch("(");
+		List<Expression> exps = new ArrayList<Expression>();
+		if (! this.peak().getText().equals(")")) {
+			exps = this.expressionList();
+		}
+		this.hardMatch(")");
+		Procedure p = (Procedure) this.current.find(ident);
+		if (p.getType() == null) {
+			throw new ParserException("Calling proper procedure as functional procedure");
+		}
+		if (p.match(exps)) {
+			return new FunctionCall(ident, exps, p);
+		} else {
+			throw new ParserException("No Procedure with matching formals");
+		}	}
 	
 	/**
 	 * Confirms the Instructions Non-terminal.
@@ -615,9 +664,15 @@ public class Parser {
 	private ProcedureCall procCall() {
 		String ident = this.matchIdent();
 		this.hardMatch("(");
-		List<Expression> exps = this.expressionList();
+		List<Expression> exps = new ArrayList<Expression>();
+		if (! this.peak().getText().equals(")")) {
+			exps = this.expressionList();
+		}
 		this.hardMatch(")");
 		Procedure p = (Procedure) this.current.find(ident);
+		if (p.getType() != null) {
+			throw new ParserException("Calling functional procedure as proper procedure");
+		}
 		if (p.match(exps)) {
 			return new ProcedureCall(ident, exps);
 		} else {
