@@ -35,7 +35,6 @@ public class sc {
 					if (! input.exists()) {
 						fileDoesNotExistError(args[0]);
 					}
-					//TODO: compile input program
 					parseOption("-d", args[0], false);
 				}
 			} else if (args.length == 2){ // If option and filename
@@ -63,7 +62,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
