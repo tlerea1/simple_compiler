@@ -726,8 +726,8 @@ public class Parser {
 		Instruction ifTrue = this.instructions();
 		toReturn.setIfTrue(ifTrue);
 		Instruction ifFalse = null;
-		while (this.peak().getText().equals("ELSEIF")) {
-			this.hardMatch("ELSEIF");
+		while (this.peak().getText().equals("ELSIF")) {
+			this.hardMatch("ELSIF");
 			Expression con = this.expression();
 			if (! (con.getType() instanceof Bool)) {
 				throw new ParserException("Condition must evaluate to bool");

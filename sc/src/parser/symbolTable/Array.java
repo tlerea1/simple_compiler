@@ -61,6 +61,6 @@ public class Array extends Type {
 	}
 	
 	public int size() {
-		return this.length * this.elemType.size() + (Singleton.getInteger().size());
+		return this.length * this.elemType.size();
 	}
 }

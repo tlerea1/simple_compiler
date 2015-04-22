@@ -238,7 +238,7 @@ public class Scanner {
 		this.keywords.add("DO");
 		this.keywords.add("WRITE");
 		this.keywords.add("READ");
-		this.keywords.add("ELSEIF");
+		this.keywords.add("ELSIF");
 		this.keywords.add("AND");
 		this.keywords.add("OR");
 		this.keywords.add("NOT");
