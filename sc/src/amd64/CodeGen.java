@@ -142,68 +142,34 @@ public class CodeGen implements ASTVisitor {
 		return;
 	}
 	
+	// Generate the code for the functions
 	public void visit(Procedure p) {
-		this.out.println("push %rbp");
+		this.out.println("push %rbp"); // Save bp
 		this.out.println("movq %rsp, %rbp");
 		this.out.println("subq $" + p.size() + ", %rsp");
 		this.out.println("movl $" + p.size() + ", %edx");
 		this.out.println("movl $0, %esi");
 		this.out.println("movq %rsp, %rdi");
-		this.out.println("call memset");
+		this.out.println("call memset"); // Allocate and zero space for locals
 		
 		if (p.getBody() != null) {
-			p.getBody().accept(this);
+			p.getBody().accept(this); // Generate instructions
 		}
 		
 		if (p.getRet() != null) {
-			if (p.getRet().accept(this) == 0) {
-				this.out.println("pop %rax");
+			if (p.getRet().accept(this) == 0) { // Generate return code
+				this.out.println("pop %rax"); // put return value in %rax
 			} else {
-				this.out.println("pop %rbx");
+				this.out.println("pop %rbx"); // Derefernce if return value is a location
 				this.out.println("movq (%rbx), %rax");
 			}
 		}
-		this.out.println("movq %rbp, %rsp");
-		this.out.println("pop %rbp");
-		this.out.println("retq\n\n");
+		this.out.println("movq %rbp, %rsp"); // Deallocate stack space
+		this.out.println("pop %rbp"); // Return bp
+		this.out.println("retq\n\n"); // Ret
 	}
 
-//	@Override
-//	public void visit(Variable var) {
-//		var.setLocation(this.offset); // Set offset from rbp
-//		var.getType().accept(this); 
-//	}
-//	
-//	public void visit(LocalVariable var) {
-//		
-//	}
-//
-//	@Override
-//	public void visit(Integer i) {
-//		this.offset -= i.size(); // Move offset by sizeof INT
-//	}
-//
-//	@Override
-//	public void visit(Array ra) {
-//		this.out.println("movq $" + ra.getLength() + ", " + this.offset + "(%rbp)"); // Save length
-//		this.offset -= SIZEOF_INT; // storing the length of the array
-//		for (int i=0;i<ra.getLength();i++) {
-//			ra.getElemType().accept(this);
-//		}
-//	}
-//
-//	@Override
-//	public void visit(Record r) {
-//		int currentOff = 0;
-//		r.getScope().accept(this); // Accept all vars in scope
-//		for (Map.Entry<String, Entry> e : r.getScope().getEntries()) {
-//			if (e.getValue() instanceof Variable) { // Set offset from record start
-//				((Variable) e.getValue()).setLocation(currentOff);
-//				currentOff += ((Variable) e.getValue()).size();
-//			}
-//		}
-//	}
-//
+
 	@Override
 	public void visit(Scope s) {
 		for (Map.Entry<String, Entry> e : s.getEntries()) {
@@ -464,30 +430,30 @@ public class CodeGen implements ASTVisitor {
 	
 	public void visit(parser.symbolTable.Variable v) { // pushes address, uses global base pointer
 		this.out.println("movq $" + v.getLocation() + ", %rax");
-		this.out.println("add _globals, %rax");
+		this.out.println("add _globals, %rax"); // Offset from main bp
 		this.out.println("push %rax");
 	}
 	
 	public void visit(LocalVariable v) {
 		this.out.println("movq $" + v.getLocation() + ", %rax");
-		this.out.println("add %rbp, %rax");
+		this.out.println("add %rbp, %rax"); // Offset from current bp
 		this.out.println("push %rax");
 	}
 	
 	public void visit(FormalVariable v) {
 		if (Singleton.isValueType(v.getType())) {
 			this.out.println("movq $" + v.getLocation() + ", %rax");
-			this.out.println("add %rbp, %rax");
+			this.out.println("add %rbp, %rax"); // Offset from current bp
 			this.out.println("push %rax");
 		} else {
 			this.out.println("movq $" + v.getLocation() + ", %rax");
-			this.out.println("add %rbp, %rax");
-			this.out.println("push (%rax)");
+			this.out.println("add %rbp, %rax"); // Offset from current bp
+			this.out.println("push (%rax)"); // Dereference passed by reference type
 		}
 	}
 
 	@Override
-	public int visit(parser.ast.Variable v) { // Push address
+	public int visit(parser.ast.Variable v) { // Call current Variable visit
 		parser.symbolTable.Variable var = v.getVar();
 		if (var instanceof LocalVariable) {
 			this.visit((LocalVariable) var);
@@ -529,21 +495,6 @@ public class CodeGen implements ASTVisitor {
 		return 1;
 	}
 
-//	@Override
-//	public int visit(Condition c) { // does a cmp left, right
-//		int left = c.getLeft().accept(this);
-//		int right = c.getRight().accept(this);
-//		this.out.println("pop %rax"); // right
-//		if (right != 0) {
-//			this.out.println("movq (%rax), %rax");
-//		}
-//		this.out.println("pop %rbx"); // left
-//		if (left != 0) {
-//			this.out.println("movq (%rbx), %rbx");
-//		}
-//		this.out.println("cmpq %rax, %rbx");
-//		return 0;
-//	}
 
 	@Override
 	public int visit(ProcedureCall proc) {

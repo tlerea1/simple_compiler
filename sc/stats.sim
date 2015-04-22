@@ -1,0 +1,90 @@
+PROGRAM stats;
+
+CONST len = 50;
+
+TYPE array=ARRAY len OF INTEGER;
+
+PROCEDURE bubble(ra : array);
+	VAR i,j,temp : INTEGER;
+	VAR swapped : BOOLEAN;
+	BEGIN
+
+	REPEAT
+		swapped := FALSE;
+		i := 1;
+		WHILE i < len DO
+			IF ra[i-1] > ra[i] THEN
+				temp := ra[i-1];
+				ra[i-1] := ra[i];
+				ra[i] := temp;
+				swapped := TRUE
+			END;
+			i := i + 1
+		END
+	UNTIL swapped = FALSE END
+END bubble;
+
+PROCEDURE median(ra : array) : INTEGER;
+	BEGIN
+	bubble(ra)
+	RETURN ra[len DIV 2]
+END median;
+
+PROCEDURE max(ra : array) : INTEGER;
+	VAR i,max : INTEGER;
+
+	BEGIN
+
+	WHILE i < len DO
+		IF ra[i] > max THEN
+			max := ra[i]
+		END;
+		i := i + 1
+	END
+
+	RETURN max
+END max;
+
+PROCEDURE min(ra : array) : INTEGER;
+	VAR i, min : INTEGER;
+
+	BEGIN
+
+	min := ra[0];
+	WHILE i < len DO
+		IF ra[i] < min THEN
+			min := ra[i]
+		END;
+		i := i + 1
+	END
+
+	RETURN min
+END min;
+
+
+VAR x : array;
+VAR i : INTEGER;
+BEGIN
+
+	i := 0;
+	WHILE i < len DO
+		x[i] := len - i;
+		i := i + 1
+	END;
+	i := 0;
+	WHILE i < len DO
+		WRITE x[i];
+		i := i + 1
+	END;
+
+	bubble(x);
+	i := 0;
+	WHILE i < len DO
+		WRITE x[i];
+		i := i + 1
+	END;
+
+	WRITE max(x);
+	WRITE min(x);
+	WRITE median(x)
+END stats.
