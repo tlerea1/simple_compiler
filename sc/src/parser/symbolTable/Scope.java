@@ -18,7 +18,7 @@ import visitor.Visitor;
 public class Scope {
 	private Scope outer;
 	private HashMap<String, Entry> table;
-	private int offset, formalOffset;
+	private int offset, formalOffset, fieldOffset;
 	
 	/**
 	 * Constructor for a Scope. 
@@ -29,6 +29,7 @@ public class Scope {
 		this.table = new HashMap<String, Entry>();
 		this.offset = 0;
 		this.formalOffset = CodeGen.SIZEOF_INT;
+		this.fieldOffset = 0;
 	}
 	
 	/**
@@ -41,6 +42,9 @@ public class Scope {
 		if (value instanceof FormalVariable) {
 			this.formalOffset += CodeGen.SIZEOF_INT;
 			((FormalVariable) value).setLocation(this.formalOffset);
+		} else if (value instanceof Field) {
+			((Field) value).setLocation(this.fieldOffset);
+			this.fieldOffset += ((Field) value).getType().size();
 		} else if (value instanceof Variable) {
 			this.offset -= ((Variable) value).getType().size();
 			((Variable) value).setLocation(this.offset);

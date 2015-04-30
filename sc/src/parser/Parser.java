@@ -172,6 +172,14 @@ public class Parser {
 		}
 	}
 	
+	private void addField(String identifier, Type type) {
+		if (! this.current.local(identifier)) { // Check for already defined
+			this.current.insert(identifier, new parser.symbolTable.Field(type));
+		} else {
+			throw new ParserException("Identifier <" + identifier + "> is already defined in current scope");
+		}
+	}
+	
 	/**
 	 * Function to add new Formal Variable to the current scope.
 	 * @param identifier the identifier
@@ -446,7 +454,7 @@ public class Parser {
 				Type t = this.type();
 				this.hardMatch(";");
 				for (String s : identifiers) {
-					addVariable(s, t);
+					addField(s, t);
 				}
 			}
 			this.hardMatch("END");

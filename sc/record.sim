@@ -1,0 +1,45 @@
+PROGRAM record;
+	CONST len = 5;
+	TYPE array = ARRAY len OF INTEGER;
+	TYPE rec = RECORD
+		a,b : INTEGER;
+		c,d : array;
+	END;
+
+	VAR rec1, rec2 : rec;
+
+	PROCEDURE initArray(a : array);
+		VAR i : INTEGER;
+
+		BEGIN
+
+		WHILE i < len DO
+			a[i] := i;
+			i := i + 1
+		END
+	END initArray;
+
+	PROCEDURE printArray(a : array);
+		VAR i : INTEGER;
+
+		BEGIN
+
+		WHILE i < len DO
+			WRITE a[i];
+			i := i + 1
+		END
+	END printArray;
+
+	BEGIN
+
+	initArray(rec1.c);
+	printArray(rec1.c);
+	rec2.d := rec1.c;
+	printArray(rec2.d);
+	rec2 := rec1;
+	printArray(rec2.d);
+	printArray(rec2.c)
+
+END record.
+
+	
