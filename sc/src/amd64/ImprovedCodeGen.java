@@ -625,6 +625,7 @@ public class ImprovedCodeGen {
 	
 	private ExpressionValue divOp(String op, Item left, Item right) {
 		this.registers.use("%rdx", null);
+		this.out.println("movq $0, %rdx");
 
 		if (left instanceof Address) {
 			String leftReg = ((Address) left).getRegister();

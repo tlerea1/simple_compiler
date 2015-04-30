@@ -216,8 +216,8 @@ public class CodeGen implements ASTVisitor {
 			this.out.println("movq %rbx, (%rax)");
 		} else { // Location need memcpy
 			int size = a.getLoc().getType().size();
-			this.out.println("sub $" + (size-SIZEOF_INT) + ", %rax");
-			this.out.println("sub $" + (size-SIZEOF_INT) + ", %rbx");
+	//			this.out.println("sub $" + (size-SIZEOF_INT) + ", %rax");
+	//			this.out.println("sub $" + (size-SIZEOF_INT) + ", %rbx");
 			this.out.println("movq %rax, %rdi");
 			this.out.println("movq %rbx, %rsi");
 			this.out.println("movl $" + size + ", %edx");

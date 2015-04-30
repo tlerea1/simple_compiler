@@ -45,12 +45,16 @@ public class RegisterAllocator {
 	public void use(String register, Item i) {
 		if (register.equals("%rax")) {
 			if (this.rax != null) {
-				this.spill("%rax");
+				if (this.rax != i) {
+					this.spill("%rax");
+				}
 			}
 			this.rax = i;
 		} else if (register.equals("%rdx")) {
 			if (this.rdx != null) {
-				this.spill("%rdx");
+				if (this.rdx != i) {
+					this.spill("%rdx");
+				}
 			}
 			this.rdx = i;
 		} else {

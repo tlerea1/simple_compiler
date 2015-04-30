@@ -1,0 +1,47 @@
+PROGRAM expression;
+	VAR a,b,x:INTEGER;
+
+	BEGIN
+
+	a := 1;
+	b := 1;
+
+	WRITE b;
+	WRITE a;
+
+	x := a + 1;
+	WRITE x;
+	WRITE a;
+
+	x := 1 + a;
+	WRITE x;
+	WRITE a;
+
+	x := a + b;
+	WRITE x;
+	WRITE a;
+	WRITE b;
+
+	x := a - 1;
+	WRITE x;
+
+	x := 1 - a;
+	WRITE x;
+
+	x := a - b;
+	WRITE x;
+
+	x := a DIV 1;
+	WRITE x;
+	WRITE a;
+
+	x := 1 MOD a DIV 1;
+	WRITE x;
+	WRITE a;
+
+	x := a DIV b;
+	WRITE x;
+	WRITE a;
+	WRITE b
+
+END expression.
