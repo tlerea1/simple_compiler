@@ -8,98 +8,37 @@ movl $8, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq $5, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmovg %rbx, %rax
-push %rax
-pop %rax
-cmp $1, %rax
+cmovg %rbx, %r14
+cmp $1, %r14
 jne L1
 L2:
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-movq (%rax), %rsi
+movq -8(%rbp), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push (%rax)
-pop %rcx
-pop %rbx
-movq (%rbx), %rax
-cmpq $5, %rax
-jae array_out_of_bounds
-imulq $8, %rax
-addq %rax, %rcx
-push %rcx
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-movq $24, %rax
-add %rbp, %rax
-push (%rax)
-pop %rcx
-pop %rbx
-movq (%rbx), %rax
-cmpq $5, %rax
-jae array_out_of_bounds
-imulq $8, %rax
-addq %rax, %rcx
-push %rcx
-pop %rax
-pop %rbx
-sub $0, %rax
-sub $0, %rbx
-movq %rax, %rdi
-movq %rbx, %rsi
-movl $8, %edx
-call memcpy
-movq $1, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-addq %rbx, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
-movq $5, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq 24(%rbp), %r14
+movq -8(%rbp), %r8
+sal $3, %r8
+addq %r8, %r14
+movq 16(%rbp), %r8
+movq -8(%rbp), %r9
+sal $3, %r9
+addq %r9, %r8
+movq (%r8), %r8
+movq %r8, (%r14)
+movq -8(%rbp), %r14
+addq $1, %r14
+movq %r14, -8(%rbp)
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmovle %rbx, %rax
-push %rax
-pop %rax
-cmpq $1, %rax
+cmovle %rbx, %r14
+cmpq $1, %r14
 jne L2
 L1:
 movq %rbp, %rsp
@@ -115,101 +54,44 @@ movl $8, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq $0, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq $0, %r14
+cmpq 16(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmove %rbx, %rax
-push %rax
-pop %rax
-cmp $1, %rax
+cmove %rbx, %r14
+cmp $1, %r14
 jne L3
-movq $0, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
+movq $0, -8(%rbp)
 jmp L4
 L3:
-movq $1, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq $1, %r14
+cmpq 16(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmove %rbx, %rax
-push %rax
-pop %rax
-cmp $1, %rax
+cmove %rbx, %r14
+cmp $1, %r14
 jne L5
-movq $1, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
+movq $1, -8(%rbp)
 jmp L6
 L5:
-movq $1, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-subq %rbx, %rax
-push %rax
+movq 16(%rbp), %r14
+subq $2, %r14
+push %r14
 call fib
 addq $8, %rsp
-push %rax
-movq $2, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-subq %rbx, %rax
-push %rax
+movq %rax, %r14
+push %r14
+movq 16(%rbp), %r14
+subq $1, %r14
+push %r14
 call fib
 addq $8, %rsp
-push %rax
-pop %rax
-pop %rbx
-addq %rbx, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
+pop %r14
+addq %rax, %r14
+movq %r14, -8(%rbp)
 L6:
 L4:
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rbx
-movq (%rbx), %rax
+movq -8(%rbp), %rax
 movq %rbp, %rsp
 pop %rbp
 retq
@@ -223,11 +105,7 @@ movl $0, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq $-8, %rax
-add _globals, %rax
-push %rax
-pop %rax
-movq (%rax), %rsi
+movq -8(%r15), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
@@ -244,22 +122,54 @@ movl $0, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq $16, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-movq (%rax), %rsi
+movq 16(%rbp), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
-movq $24, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-movq (%rax), %rsi
+movq 24(%rbp), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
+movq %rbp, %rsp
+pop %rbp
+retq
+
+
+printArray:
+push %rbp
+movq %rsp, %rbp
+subq $8, %rsp
+movl $8, %edx
+movl $0, %esi
+movq %rsp, %rdi
+call memset
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
+movq $1, %rbx
+cmovg %rbx, %r14
+cmp $1, %r14
+jne L7
+L8:
+movq 16(%rbp), %r14
+movq -8(%rbp), %r8
+sal $3, %r8
+addq %r8, %r14
+movq (%r14), %rsi
+movl $printf_num, %edi
+movl $0, %eax
+call printf
+movq -8(%rbp), %r14
+addq $1, %r14
+movq %r14, -8(%rbp)
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
+movq $1, %rbx
+cmovle %rbx, %r14
+cmpq $1, %r14
+jne L8
+L7:
 movq %rbp, %rsp
 pop %rbp
 retq
@@ -273,89 +183,36 @@ movl $8, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq $5, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmovg %rbx, %rax
-push %rax
-pop %rax
-cmp $1, %rax
-jne L7
-L8:
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-movq (%rax), %rsi
+cmovg %rbx, %r14
+cmp $1, %r14
+jne L9
+L10:
+movq -8(%rbp), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-movq $16, %rax
-add %rbp, %rax
-push (%rax)
-pop %rcx
-pop %rbx
-movq (%rbx), %rax
-cmpq $5, %rax
-jae array_out_of_bounds
-imulq $8, %rax
-addq %rax, %rcx
-push %rcx
-pop %rax
-pop %rbx
-sub $0, %rax
-sub $0, %rbx
-movq %rax, %rdi
-movq %rbx, %rsi
-movl $8, %edx
-call memcpy
-movq $1, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-addq %rbx, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
-movq $5, %rax
-push %rax
-movq $-8, %rax
-add %rbp, %rax
-push %rax
-pop %rcx
-movq (%rcx), %rax
-pop %rbx
-cmpq %rax, %rbx
-movq $0, %rax
+movq 16(%rbp), %r14
+movq -8(%rbp), %r8
+sal $3, %r8
+addq %r8, %r14
+leaq -8(%rbp), %r8
+movq (%r8), %r8
+movq %r8, (%r14)
+movq -8(%rbp), %r14
+addq $1, %r14
+movq %r14, -8(%rbp)
+movq $5, %r14
+cmpq -8(%rbp), %r14
+movq $0, %r14
 movq $1, %rbx
-cmovle %rbx, %rax
-push %rax
-pop %rax
-cmpq $1, %rax
-jne L8
-L7:
+cmovle %rbx, %r14
+cmpq $1, %r14
+jne L10
+L9:
 movq %rbp, %rsp
 pop %rbp
 retq
@@ -365,58 +222,41 @@ main:
 
 push %rbp
 movq %rsp, %rbp
-subq $96, %rsp
-movl $96, %edx
+subq $136, %rsp
+movl $136, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
-movq %rbp, _globals
-movq $-56, %rax
-add _globals, %rax
-push %rax
+movq %rbp, %r15
+leaq -56(%r15), %r14
+push %r14
 call set
 addq $8, %rsp
-movq $-96, %rax
-add _globals, %rax
-push %rax
-movq $-56, %rax
-add _globals, %rax
-push %rax
+leaq -96(%r15), %r14
+push %r14
+leaq -56(%r15), %r14
+push %r14
 call copy
 addq $16, %rsp
-movq $4, %rax
-push %rax
-movq $-96, %rax
-add _globals, %rax
-push %rax
-pop %rcx
-pop %rax
-cmpq $5, %rax
-jae array_out_of_bounds
-imulq $8, %rax
-addq %rax, %rcx
-push %rcx
-pop %rax
-movq (%rax), %rsi
+movq -64(%r15), %rsi
 movl $printf_num, %edi
 movl $0, %eax
 call printf
-movq $8, %rax
-push %rax
-movq $7, %rax
-push %rax
+push $8
+push $7
 call print
 addq $16, %rsp
-movq $167, %rax
-push %rax
-movq $-8, %rax
-add _globals, %rax
-push %rax
-pop %rax
-pop %rbx
-movq %rbx, (%rax)
+movq $167, -8(%r15)
 call globalTest
 addq $0, %rsp
+leaq -96(%r15), %rsi
+leaq -136(%r15), %rdi
+movq $40, %rdx
+call memcpy
+leaq -136(%r15), %r14
+push %r14
+call printArray
+addq $8, %rsp
 movl $0, %eax
 leave
 retq

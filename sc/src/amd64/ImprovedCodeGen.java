@@ -172,7 +172,7 @@ public class ImprovedCodeGen {
 		if (! Singleton.isValueType(var.getType())) {
 			String reg = this.registers.pop(); // TODO: Spill
 			this.out.println("movq " + var.getLocation() + "(%rbp), " + reg);
-			this.out.println("movq (" + reg + "), " + reg);
+//			this.out.println("movq (" + reg + "), " + reg);
 			return new Address(reg);
 		} else {
 			return new ConstantOffset(var.getLocation(), "%rbp");
@@ -222,8 +222,15 @@ public class ImprovedCodeGen {
 			if (exp instanceof Address) {
 				this.out.println("movq " + ((Address) exp).getRegister() + ", %rsi");
 			} else if (exp instanceof ConstantOffset) {
-				this.out.println("leaq " + ((ConstantOffset) exp).getOffset() + "(" + ((ConstantOffset) exp).getRegister() + "), %rdi");
+				this.out.println("leaq " + ((ConstantOffset) exp).getOffset() + "(" + ((ConstantOffset) exp).getRegister() + "), %rsi");
 			}
+			
+			if (location instanceof Address) {
+				this.out.println("movq " + ((Address) location).getRegister() + ", %rdi");
+			} else if (location instanceof ConstantOffset) {
+				this.out.println("leaq " + ((ConstantOffset) location).getOffset() + "(" + ((ConstantOffset) location).getRegister() + "), %rdi");
+			}
+			
 			this.registers.use("%rdx", null);
 			this.out.println("movq $" + a.getExp().getType().size() + ", %rdx");
 			List<String> registers = this.pushRegisters();
@@ -243,6 +250,12 @@ public class ImprovedCodeGen {
 				this.registers.push(((ExpressionValue) exp).getRegister());
 			} else if (exp instanceof ConstantExpression) {
 				this.out.println("movq $" + ((ConstantExpression) exp).getValue() + ", (" + loc + ")");
+			} else if (exp instanceof ConstantOffset) {
+				String reg = this.registers.pop();
+				this.out.println("leaq " + this.compareHelper(exp) + ", " + reg);
+				this.out.println("movq (" + reg + "), " + reg);
+				this.out.println("movq " + reg + ", (" + loc + ")");
+				this.registers.push(reg);
 			} else {
 				throw new AMD64Exception("Assign: unknown expression item type");
 			}
@@ -260,6 +273,12 @@ public class ImprovedCodeGen {
 				this.registers.push(((ExpressionValue) exp).getRegister());
 			} else if (exp instanceof ConstantExpression) {
 				this.out.println("movq $" + ((ConstantExpression) exp).getValue() + ", " + offset + "(" + loc + ")");
+			} else if (exp instanceof ConstantOffset) {
+				String reg = this.registers.pop();
+				this.out.println("leaq " + this.compareHelper(exp) + ", " + reg);
+				this.out.println("movq (" + reg + "), " + reg);
+				this.out.println("movq " + reg + ", " + this.compareHelper(location));
+				this.registers.push(reg);
 			} else {
 				throw new AMD64Exception("Assign: unknown expression item type");
 			}
@@ -380,8 +399,38 @@ public class ImprovedCodeGen {
 		
 	}
 
-	private void visit(ProcedureCall proc) {
-		// TODO Auto-generated method stub
+	private void visit(ProcedureCall func) {
+		List<String> reg = this.pushRegisters();
+		for (int i=func.getActuals().size()-1;i>=0;i--) {
+			Item actual = this.visit(func.getActuals().get(i));
+			if (actual instanceof ConstantExpression) {
+				this.out.println("push " + this.compareHelper(actual));
+			} else if (actual instanceof ExpressionValue) {
+				this.out.println("push " + this.compareHelper(actual));
+			} else if (actual instanceof Address) {
+				if (Singleton.isValueType(func.getActuals().get(i).getType())) {
+					this.out.println("push " + this.compareHelper(actual));
+				} else {
+					String register = this.registers.pop();
+					this.out.println("leaq " + this.compareHelper(actual) + ", " + register);
+					this.out.println("push " + register);
+					this.registers.push(register);
+				}
+			} else if (actual instanceof ConstantOffset) {
+				if (Singleton.isValueType(func.getActuals().get(i).getType())) {
+					this.out.println("push " + this.compareHelper(actual));
+				} else {
+					String register = this.registers.pop();
+					this.out.println("leaq " + this.compareHelper(actual) + ", " + register);
+					this.out.println("push " + register);
+					this.registers.push(register);
+				}
+			}
+			this.free(actual);
+		} // Push all args in reverse order since first formal has lowest address
+		this.out.println("call " + func.getFunction());
+		this.out.println("addq $" + func.getActuals().size() * CodeGen.SIZEOF_INT + ", %rsp");
+		this.popRegisters(reg);
 	}
 
 	public Item visit(Expression e) {
@@ -971,13 +1020,13 @@ public class ImprovedCodeGen {
 		} else if (index instanceof ConstantOffset) {
 			if (location instanceof Address) {
 				String register = ((ConstantOffset) index).getRegister();
-				this.out.println("addq $" + ((ConstantOffset) index).getOffset() + ", " + register); // apply offset
-				this.out.println("movq (" + register + "), " + register); // Dereference
+				String newReg = this.registers.pop();
+				this.out.println("movq " + this.compareHelper(index) + ", " + newReg); // newReg holds index
 				String locationRegister = ((Address) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
-				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
-				this.out.println("addq " + register + ", " + locationRegister); // add offset to original
-				this.registers.push(register); // Free index register
+				this.out.println("sal $" + size + ", " + newReg); // Shift to jump elements in array
+				this.out.println("addq " + newReg + ", " + locationRegister); // add offset to original
+				this.registers.push(newReg); // Free index register
 				return location;
 			} else if (location instanceof ConstantOffset) {
 				String indexRegister = ((ConstantOffset) index).getRegister();

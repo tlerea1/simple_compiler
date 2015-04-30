@@ -50,6 +50,15 @@ PROCEDURE print(a,b:INTEGER);
 	WRITE b
 END print;
 
+PROCEDURE printArray(a : array);
+	VAR i : INTEGER;
+	BEGIN
+	WHILE i < len DO
+		WRITE a[i];
+		i := i + 1
+	END
+END printArray;
+
 PROCEDURE globalTest();
 	BEGIN
 
@@ -57,7 +66,7 @@ PROCEDURE globalTest();
 END globalTest;
 
 VAR x : INTEGER;
-VAR a,b : array;
+VAR a,b,c : array;
 
 BEGIN
 
@@ -67,7 +76,9 @@ copy(a,b);
 WRITE(b[4]);
 print(7,8);
 int := 167;
-globalTest()
+globalTest();
+c := b;
+printArray(c)
 
 
 
