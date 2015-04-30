@@ -9,6 +9,7 @@ import parser.Parser;
 import scanner.Scanner;
 import scanner.Token;
 import amd64.CodeGen;
+import amd64.ImprovedCodeGen;
 
 /**
  * SIMPLE compiler.
@@ -23,7 +24,7 @@ public class sc {
 	public static void main(String[] args) {
 		try {
 			if (args.length > 3) {
-				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]");
+				throw new RuntimeException("Usage - ./sc [\"-\" (\"s\"|\"c\"|\"t\"|\"a\"|\"i\"|\"x\")] [\"-g\"] [filename]");
 			}
 			if (args.length == 0) {
 				parseOption("-d", null, false);
@@ -62,7 +63,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 
@@ -159,6 +160,24 @@ public class sc {
 					code = new CodeGen(p.getast(), p.getST(), out);
 				}
 				code.generateAMD64();
+				break;
+			case 'x':
+				if (filename == null) {
+					sc = new Scanner();
+				} else {
+					sc = new Scanner(filename);
+				}
+				p = new Parser(sc, graphical);
+				p.parse();
+				ImprovedCodeGen code2;
+				if (filename == null) {
+					code2 = new ImprovedCodeGen(p.getast(), p.getST(), System.out);
+				} else {
+					filename = filename.substring(0, filename.indexOf('.'));
+					PrintStream out = new PrintStream(filename + ".s");
+					code2 = new ImprovedCodeGen(p.getast(), p.getST(), out);
+				}
+				code2.generateAMD64();
 				break;
 			default:
 				throw new RuntimeException("invalid option"); // Not a preset option

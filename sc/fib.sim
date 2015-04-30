@@ -1,0 +1,23 @@
+PROGRAM fib;
+
+	PROCEDURE fib(n:INTEGER):INTEGER;
+		VAR ret : INTEGER;
+		BEGIN
+
+		IF n = 0 THEN
+			ret := 0
+		ELSIF n = 1 THEN
+			ret := 1
+		ELSE
+			ret := fib(n-1) + fib(n-2)
+		END
+
+		RETURN ret
+	END fib;
+
+	VAR n : INTEGER;
+
+	BEGIN
+
+	WRITE fib(30)
+END fib.

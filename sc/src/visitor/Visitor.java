@@ -26,14 +26,25 @@ public interface Visitor {
 	 * @param constant the constant to visit.
 	 */
 	public void visit(Constant constant);
-	
+	/**
+	 * Visits the given Procedure.
+	 * @param p the procedure to visit
+	 */
 	public void visit(Procedure p);
 	/**
 	 * Visits the given Variable. Which includes its type.
 	 * @param var the Variable to visit.
 	 */
 	public void visit(parser.symbolTable.Variable var);
+	/**
+	 * Visits the given Formal Variable.
+	 * @param var the variable to visit
+	 */
 	public void visit(FormalVariable var);
+	/**
+	 * Visits the given LocalVariable.
+	 * @param var the variable to visit
+	 */
 	public void visit(LocalVariable var);
 	/**
 	 * Visits the given Integer.

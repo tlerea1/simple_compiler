@@ -30,7 +30,11 @@ import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import util.Singleton;
 import visitor.ASTVisitor;
-
+/**
+ * AMD64 Code generator for SC.
+ * @author tuvialerea
+ *
+ */
 public class CodeGen implements ASTVisitor {
 
 	private Instruction ast;
@@ -39,24 +43,36 @@ public class CodeGen implements ASTVisitor {
 	private PrintStream out;
 	private int currentLabel = 0;
 	
+	/**
+	 * Size of INTEGER in bytes
+	 */
 	public static final int SIZEOF_INT = 8;
 	
+	/**
+	 * AMD64 CodeGen Constructor.
+	 * @param ast the abstract syntax tree
+	 * @param st the symbol table
+	 * @param stream the stream to print to
+	 */
 	public CodeGen(Instruction ast, Scope st, PrintStream stream) {
 		this.ast = ast;
 		this.st = st;
 		this.out = stream;
 	}
 	
+	/**
+	 * Function to call to generate code to specified stream.
+	 */
 	public void generateAMD64() {
 		this.out.println(".text");
 		this.out.println(".globl main");
-		this.st.accept(this);
+		this.st.accept(this); // Handle declarations
 
-		this.genFunctions();
+		this.genFunctions(); // Start of main
 		if (this.ast != null) {
-			this.ast.accept(this);
+			this.ast.accept(this); // Program instructions
 		}
-		this.text();
+		this.text(); // End of assembly
 	}
 	/*
 	 * Function to output the start of main, includes stack allocation and memset
@@ -480,7 +496,7 @@ public class CodeGen implements ASTVisitor {
 		this.out.println("jae array_out_of_bounds");
 		int size = ((Array) i.getLoc().getType()).getElemType().size();
 		this.out.println("imulq $" + size + ", %rax"); // Skip sizeof element
-		this.out.println("subq %rax, %rcx");
+		this.out.println("addq %rax, %rcx");
 		this.out.println("push %rcx");
 		return 1;
 	}
@@ -490,7 +506,7 @@ public class CodeGen implements ASTVisitor {
 		int offset = f.getVar().getVar().getLocation();
 		f.getLoc().accept(this);
 		this.out.println("pop %rax");
-		this.out.println("subq $" + offset + ", %rax"); // Get adjusted address
+		this.out.println("addq $" + offset + ", %rax"); // Get adjusted address
 		this.out.println("push %rax");
 		return 1;
 	}

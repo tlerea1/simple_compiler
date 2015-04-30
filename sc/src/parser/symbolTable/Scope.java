@@ -27,8 +27,8 @@ public class Scope {
 	public Scope(Scope outer) {
 		this.outer = outer;
 		this.table = new HashMap<String, Entry>();
-		this.offset = -CodeGen.SIZEOF_INT;
-		this.formalOffset = 2*CodeGen.SIZEOF_INT;
+		this.offset = 0;
+		this.formalOffset = CodeGen.SIZEOF_INT;
 	}
 	
 	/**
@@ -39,11 +39,11 @@ public class Scope {
 	 */
 	public Entry insert(String identifier, Entry value) {
 		if (value instanceof FormalVariable) {
-			((FormalVariable) value).setLocation(this.formalOffset);
 			this.formalOffset += CodeGen.SIZEOF_INT;
+			((FormalVariable) value).setLocation(this.formalOffset);
 		} else if (value instanceof Variable) {
-			((Variable) value).setLocation(this.offset);
 			this.offset -= ((Variable) value).getType().size();
+			((Variable) value).setLocation(this.offset);
 		}
 		return this.table.put(identifier, value);
 	}

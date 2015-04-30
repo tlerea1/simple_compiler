@@ -1,0 +1,17 @@
+PROGRAM X;
+	VAR a,b : INTEGER;
+	VAR c : BOOLEAN;
+
+	CONST f=15;
+
+	PROCEDURE add(a,b:INTEGER) :INTEGER;
+		RETURN a + b
+	END add;
+
+	BEGIN
+	
+	a := 5;
+	WRITE add(a,6)
+
+	
+END X.

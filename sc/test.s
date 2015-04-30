@@ -45,7 +45,7 @@ movq (%rbx), %rax
 cmpq $5, %rax
 jae array_out_of_bounds
 imulq $8, %rax
-subq %rax, %rcx
+addq %rax, %rcx
 push %rcx
 movq $-8, %rax
 add %rbp, %rax
@@ -59,7 +59,7 @@ movq (%rbx), %rax
 cmpq $5, %rax
 jae array_out_of_bounds
 imulq $8, %rax
-subq %rax, %rcx
+addq %rax, %rcx
 push %rcx
 pop %rax
 pop %rbx
@@ -313,7 +313,7 @@ movq (%rbx), %rax
 cmpq $5, %rax
 jae array_out_of_bounds
 imulq $8, %rax
-subq %rax, %rcx
+addq %rax, %rcx
 push %rcx
 pop %rax
 pop %rbx
@@ -365,28 +365,28 @@ main:
 
 push %rbp
 movq %rsp, %rbp
-subq $112, %rsp
-movl $112, %edx
+subq $96, %rsp
+movl $96, %edx
 movl $0, %esi
 movq %rsp, %rdi
 call memset
 movq %rbp, _globals
-movq $-24, %rax
+movq $-56, %rax
 add _globals, %rax
 push %rax
 call set
 addq $8, %rsp
-movq $-72, %rax
+movq $-96, %rax
 add _globals, %rax
 push %rax
-movq $-24, %rax
+movq $-56, %rax
 add _globals, %rax
 push %rax
 call copy
 addq $16, %rsp
 movq $4, %rax
 push %rax
-movq $-72, %rax
+movq $-96, %rax
 add _globals, %rax
 push %rax
 pop %rcx
@@ -394,7 +394,7 @@ pop %rax
 cmpq $5, %rax
 jae array_out_of_bounds
 imulq $8, %rax
-subq %rax, %rcx
+addq %rax, %rcx
 push %rcx
 pop %rax
 movq (%rax), %rsi

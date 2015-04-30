@@ -10,8 +10,8 @@ public abstract class Type extends Entry {
 	 */
 	public abstract Box getBox();
 	/**
-	 * Gets the size in multiples of sizeof(INTEGER) for target architecture 
-	 * @return number of times of sizeof(int)
+	 * Gets the size in number of bytes for target architecture (uses CodeGen.SIZEOF_INT)
+	 * @return number of bytes
 	 */
 	public abstract int size();
 

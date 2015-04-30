@@ -9,7 +9,7 @@ PROCEDURE fib(n : INTEGER) : INTEGER;
 
     IF n = 0 THEN
         ret := 0
-    ELSEIF n = 1 THEN
+    ELSIF n = 1 THEN
         ret := 1
     ELSE
         ret := fib(n-2) + fib (n-1)
