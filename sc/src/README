@@ -4,6 +4,19 @@ tlerea1@jhu.edu
 make will compile sc
 to run: ./sc
 
+HW9:
+
+For this assignment I made a much improved code generator. I used the Item idea
+pass information up the AST. This means that all constants are handled nicely.
+Offsets are calculated at compile time, and Registers are allocated nicely. The
+memory layout is the same as in HW8. The difference is now %r15 was saved as the value
+of the main %rbp for functions to reference globals. %rax and %rdx were handled
+differently than the general purpose registers (%r8-14) since they are mainly used
+by the idivq instruction. Before function calls all registers in use are pushed to
+the stack to save their values and popped back after. Spilling was not implemented. 
+Overall the codeGenerator is a bit of a mess due to the 16 possible combination of
+items in a binary.  
+
 HW8:
 
 For this assignment I added else if, booleans, and procedures. Else if was the simple
