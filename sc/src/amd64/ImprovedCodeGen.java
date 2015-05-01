@@ -32,15 +32,17 @@ public class ImprovedCodeGen {
 	private RegisterAllocator registers;
 	private Instruction ast;
 	private Scope st;
-	private PrintStream out;
+	private PrintStream outputstream;
 	private int currentLabel;
+	private Output out;
 	
 	public ImprovedCodeGen(Instruction ast, Scope st, PrintStream out) {
 		this.ast = ast;
 		this.st = st;
-		this.out = out;
+		this.outputstream = out;
 		this.currentLabel = 0;
 		this.registers = new RegisterAllocator(out);
+		this.out = new Output();
 	}
 	
 	public void generateAMD64() {
@@ -54,6 +56,7 @@ public class ImprovedCodeGen {
 		}
 		this.registers.free();
 		this.text(); // End of assembly
+		this.outputstream.print(this.out);
 	}
 	
 	/*
@@ -957,8 +960,12 @@ public class ImprovedCodeGen {
 	public Item visit(Index i) {
 		Item index = this.visit(i.getExp());
 		Item location = this.visit(i.getLoc());
-		
+		int arrayLength = ((Array) i.getLoc().getType()).getLength();
 		if (index instanceof ConstantExpression) {
+			int indexVal = ((ConstantExpression) index).getValue();
+			if (indexVal < 0 || indexVal >= arrayLength) {
+				throw new AMD64Exception("Index out of bounds exception");
+			}
 			if (location instanceof Address) {
 				String reg = ((Address) location).getRegister();
 				int offset = ((ConstantExpression) index).getValue() * ((Array) i.getLoc().getType()).getElemType().size();
@@ -976,6 +983,8 @@ public class ImprovedCodeGen {
 			if (location instanceof Address) {
 				String register = ((Address) index).getRegister();
 				this.out.println("movq (" + register + "), " + register); // Dereference address
+				this.out.println("cmpq $" + arrayLength + ", " + register);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((Address) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
@@ -985,6 +994,8 @@ public class ImprovedCodeGen {
 			} else if (location instanceof ConstantOffset) {
 				String register = ((Address) index).getRegister();
 				this.out.println("movq (" + register + "), " + register); // Dereference address
+				this.out.println("cmpq $" + arrayLength + ", " + register);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
@@ -999,6 +1010,8 @@ public class ImprovedCodeGen {
 		} else if (index instanceof ExpressionValue) {
 			if (location instanceof Address) {
 				String register = ((ExpressionValue) index).getRegister();
+				this.out.println("cmpq $" + arrayLength + ", " + register);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((Address) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
@@ -1007,6 +1020,8 @@ public class ImprovedCodeGen {
 				return location; // Return adjusted address
 			} else if (location instanceof ConstantOffset) {
 				String register = ((ExpressionValue) index).getRegister();
+				this.out.println("cmpq $" + arrayLength + ", " + register);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
@@ -1023,6 +1038,8 @@ public class ImprovedCodeGen {
 				String register = ((ConstantOffset) index).getRegister();
 				String newReg = this.registers.pop();
 				this.out.println("movq " + this.compareHelper(index) + ", " + newReg); // newReg holds index
+				this.out.println("cmpq $" + arrayLength + ", " + newReg);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((Address) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + newReg); // Shift to jump elements in array
@@ -1034,6 +1051,8 @@ public class ImprovedCodeGen {
 				int indexOffset = ((ConstantOffset) index).getOffset();
 				String newReg1 = this.registers.pop();
 				this.out.println("movq " + indexOffset + "(" + indexRegister + "), " + newReg1); // newReg1 holds index
+				this.out.println("cmpq $" + arrayLength + ", " + newReg1);
+				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
 				int locationOffset = ((ConstantOffset) location).getOffset();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount

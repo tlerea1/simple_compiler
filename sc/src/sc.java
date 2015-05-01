@@ -8,6 +8,7 @@ import java.util.Collection;
 import parser.Parser;
 import scanner.Scanner;
 import scanner.Token;
+import amd64.AMD64Exception;
 import amd64.CodeGen;
 import amd64.ImprovedCodeGen;
 
@@ -63,7 +64,7 @@ public class sc {
 			}
 		} catch (Exception e) {
 			System.err.println("error: " + e.getMessage());
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 
@@ -177,7 +178,15 @@ public class sc {
 					PrintStream out = new PrintStream(filename + ".s");
 					code2 = new ImprovedCodeGen(p.getast(), p.getST(), out);
 				}
-				code2.generateAMD64();
+				try {
+					code2.generateAMD64();
+				} catch (AMD64Exception e) {
+					File f = new File(filename + ".s");
+					if (f.exists()) {
+						f.delete();
+					}
+					throw e;
+				}
 				break;
 			default:
 				throw new RuntimeException("invalid option"); // Not a preset option
