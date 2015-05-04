@@ -13,6 +13,7 @@ import visitor.Visitor;
 public class Array extends Type {
 	private int length;
 	private Type elemType;
+	private int currentLength;
 	
 	/**
 	 * Array constructor.
@@ -22,6 +23,7 @@ public class Array extends Type {
 	public Array(int len, Type type) {
 		this.length = len;
 		this.elemType = type;
+		this.currentLength = len;
 	}
 
 	/**
@@ -29,7 +31,7 @@ public class Array extends Type {
 	 * @return the length of the array
 	 */
 	public int getLength() {
-		return length;
+		return currentLength;
 	}
 
 	/**
@@ -62,5 +64,25 @@ public class Array extends Type {
 	
 	public int size() {
 		return this.length * this.elemType.size();
+	}
+	
+	public boolean equals(Object o) {
+		if (o instanceof Array) {
+			Array other = (Array) o;
+			if (this.length == -1 || other.length == -1) {
+				return this.elemType.equals(other.elemType);
+			} else {
+				return super.equals(o);
+			}
+		}
+		return false;
+	}
+	
+	public int hashCode() {
+		return super.hashCode();
+	}
+	
+	public void setCurrentLength(int len) {
+		this.currentLength = len;
 	}
 }

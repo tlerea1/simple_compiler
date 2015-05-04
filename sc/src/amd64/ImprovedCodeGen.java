@@ -376,9 +376,7 @@ public class ImprovedCodeGen {
 			this.out.println("movq $-1, " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + ")");
 		}		
 		this.out.println("L" + done + ":");
-		if (i instanceof Address) {
-			this.registers.push(((Address) i).getRegister());
-		}
+		this.free(i);
 //		this.registers.free();
 	}
 
@@ -398,6 +396,7 @@ public class ImprovedCodeGen {
 		this.out.println("movl $printf_num, %edi");
 		this.out.println("movl $0, %eax");
 		this.out.println("call printf");
+		this.free(i);
 //		this.registers.free();
 		
 	}
@@ -405,6 +404,11 @@ public class ImprovedCodeGen {
 	private void visit(ProcedureCall func) {
 		List<String> reg = this.pushRegisters();
 		for (int i=func.getActuals().size()-1;i>=0;i--) {
+			if (func.getActuals().get(i).getType() instanceof Array) {
+				((Array) ((parser.symbolTable.Variable) func.getProc().getScope()
+						.find(func.getProc().getFormals().get(i).getIdent())).getType())
+						.setCurrentLength(((Array) func.getActuals().get(i).getType()).getLength());
+			}
 			Item actual = this.visit(func.getActuals().get(i));
 			if (actual instanceof ConstantExpression) {
 				this.out.println("push " + this.compareHelper(actual));
@@ -776,7 +780,9 @@ public class ImprovedCodeGen {
 		} else if (i instanceof Address) {
 			this.registers.push(((Address) i).getRegister());
 		} else if (i instanceof ConstantOffset) {
-			return;
+			if (!((ConstantOffset) i).getRegister().equals("%r15") && ! ((ConstantOffset) i).getRegister().equals("%rbp")) {
+				this.registers.push(((ConstantOffset) i).getRegister());
+			}
 		} else {
 			throw new AMD64Exception("SHOULD NOT BE THROWN free");
 		}

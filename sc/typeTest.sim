@@ -1,0 +1,16 @@
+PROGRAM typeTest;
+	VAR a : INTEGER;
+	VAR b : BOOLEAN;
+	VAR array : ARRAY 5 OF INTEGER;
+	
+	PROCEDURE genArray(a : ARRAY OF INTEGER);
+		BEGIN
+		WRITE a[4]
+	END genArray;
+		
+	BEGIN
+
+	genArray(array)
+
+END typeTest.
+

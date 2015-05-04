@@ -1,0 +1,6 @@
+PROGRAM bool;
+	VAR x : BOOLEAN;
+
+	BEGIN
+		WRITE FALSE
+END bool.

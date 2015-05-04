@@ -2,15 +2,45 @@ package parser.ast;
 
 import java.util.List;
 
+import parser.symbolTable.Procedure;
+import parser.symbolTable.Scope;
 import visitor.ASTVisitor;
 
 public class ProcedureCall extends Instruction {
 	private String function;
 	private List<Expression> actuals;
+	private Procedure proc;
+	private Scope scope;
 	
-	public ProcedureCall(String function, List<Expression> actuals) {
+	public ProcedureCall(String function, List<Expression> actuals, Procedure proc) {
 		this.function = function;
 		this.actuals = actuals;
+		this.proc = proc;
+		this.scope = this.proc.getScope().clone();
+		this.setTypes();
+	}
+	
+	public Procedure getProc() {
+		return proc;
+	}
+
+	public void setProc(Procedure proc) {
+		this.proc = proc;
+	}
+
+	public Scope getScope() {
+		return scope;
+	}
+
+	public void setScope(Scope scope) {
+		this.scope = scope;
+	}
+
+	private void setTypes() {
+		for (int i=0;i<this.actuals.size();i++) {
+			((parser.symbolTable.Variable) this.scope.find(this.proc.getFormals().get(i).getIdent()))
+				.setType(this.actuals.get(i).getType());
+		}
 	}
 
 	public String getFunction() {

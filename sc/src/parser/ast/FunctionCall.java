@@ -3,6 +3,7 @@ package parser.ast;
 import java.util.List;
 
 import parser.symbolTable.Procedure;
+import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
 import visitor.ASTVisitor;
 
@@ -11,11 +12,24 @@ public class FunctionCall extends Expression {
 	private String ident;
 	private List<Expression> actuals;
 	private Procedure proc;
+	private Scope scope;
 	
 	public FunctionCall(String identifier, List<Expression> actuals, Procedure proc) {
 		this.setIdent(identifier);
 		this.setActuals(actuals);
 		this.proc = proc;
+		this.scope = this.proc.getScope().clone();
+		this.setTypes();
+	}
+	
+	/*
+	 * Private helper for setting all of the types of the formalVariables in the call scope
+	 */
+	private void setTypes() {
+		for (int i=0;i<this.actuals.size();i++) {
+			((parser.symbolTable.Variable) this.scope.find(this.proc.getFormals().get(i).getIdent()))
+				.setType(this.actuals.get(i).getType());
+		}
 	}
 	
 	@Override

@@ -70,7 +70,7 @@ public class Procedure extends Entry {
 			return false;
 		}
 		for (int i=0;i<this.formals.size();i++) {
-			if (exps.get(i).getType() != this.formals.get(i).getType()) {
+			if (! exps.get(i).getType().equals(this.formals.get(i).getType())) {
 				return false;
 			}
 		}

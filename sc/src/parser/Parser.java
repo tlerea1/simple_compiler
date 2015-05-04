@@ -290,6 +290,11 @@ public class Parser {
 			Collection<String> identifiers = this.identifierList();
 			this.hardMatch(":");
 			Type t = this.type();
+			if (t instanceof Array) {
+				if (((Array) t).getLength() == -1) {
+					throw new ParserException("Declaring Array with no length");
+				}
+			}
 			this.hardMatch(";");
 			for (String s : identifiers) {
 				addVariable(s, t);
@@ -306,6 +311,11 @@ public class Parser {
 			Collection<String> identifiers = this.identifierList();
 			this.hardMatch(":");
 			Type t = this.type();
+			if (t instanceof Array) {
+				if (((Array) t).getLength() == -1) {
+					throw new ParserException("Declaring Array with no length");
+				}
+			}
 			this.hardMatch(";");
 			for (String s : identifiers) {
 				addLocalVariable(s, t);
@@ -325,7 +335,12 @@ public class Parser {
 			String identifier = this.matchIdent();
 			this.hardMatch("=");
 			Type t = this.type();
-			this.hardMatch(";");
+			if (t instanceof Array) {
+				if (((Array) t).getLength() == -1) {
+					throw new ParserException("Declaring Array with no length");
+				}
+			}
+ 			this.hardMatch(";");
 			addType(identifier, t);
 		}
 		this.obs.accend();
@@ -395,7 +410,7 @@ public class Parser {
 				throw new ParserException("Procedure returning without specified return type");
 			}
 			ret = expression();
-			if (ret.getType() != retType) {
+			if (! ret.getType().equals(retType)) {
 				throw new ParserException("Returning expression of different than specified type");
 			}
 		}
@@ -432,17 +447,25 @@ public class Parser {
 			}
 		} else if (next.getText().equals("ARRAY")) {
 			this.hardMatch("ARRAY");
-			Expression exp = this.expression();
-			if (exp instanceof Number) {
-				int len = ((Number) exp).getNum().getValue();
-				if (len < 0) {
-					throw new ParserException("arrayDecl: array length is negative");
+			String peak = this.peak().getText();
+			if (! peak.equals("OF")) {
+
+				Expression exp = this.expression();
+				if (exp instanceof Number) {
+					int len = ((Number) exp).getNum().getValue();
+					if (len < 0) {
+						throw new ParserException("arrayDecl: array length is negative");
+					}
+					this.hardMatch("OF");
+					Type t = this.type();
+					toReturn = new Array(len, t);
+				} else {
+					throw new ParserException("arrayDecl: length does not evaluate to number");
 				}
+			} else {
 				this.hardMatch("OF");
 				Type t = this.type();
-				toReturn = new Array(len, t);
-			} else {
-				throw new ParserException("arrayDecl: length does not evaluate to number");
+				toReturn = new Array(-1, t); // Generic length array
 			}
 		} else if (next.getText().equals("RECORD")) {
 			this.hardMatch("RECORD");
@@ -682,7 +705,7 @@ public class Parser {
 			throw new ParserException("Calling functional procedure as proper procedure");
 		}
 		if (p.match(exps)) {
-			return new ProcedureCall(ident, exps);
+			return new ProcedureCall(ident, exps, p);
 		} else {
 			throw new ParserException("No Procedure with matching formals");
 		}
@@ -702,11 +725,11 @@ public class Parser {
 			this.obs.accend();
 			if (e instanceof Location) {
 				Type t = ((Location) e).getType();
-				if (((Location) exp).getType() != t) { // Do not refer to the same type
+				if (!((Location) exp).getType().equals(t)) { // Do not refer to the same type
 					throw new ParserException("Assignment between two different types");
 				}
 			} else { // Binary or Number ie INTEGER
-				if (exp.getType() != e.getType()) {
+				if (!exp.getType().equals(e.getType())) {
  					throw new ParserException("Assigning incompatible types");
  				}
 			}
@@ -892,7 +915,7 @@ public class Parser {
 				this.hardMatch("[");
 				Collection<Expression> indecies = this.expressionList();
 				for (Expression e : indecies) {
-					if (e.getType() != Singleton.getInteger()) {
+					if (!e.getType().equals(Singleton.getInteger())) {
 						throw new ParserException("Selecting with non-integer");
 					}
 				}

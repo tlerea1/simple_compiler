@@ -162,4 +162,12 @@ public class Scope {
 		this.offset = offset;
 	}
 	
+	public Scope clone() {
+		Scope toReturn = new Scope(this.outer);
+		for (Map.Entry<String, Entry> e : this.table.entrySet()) {
+			toReturn.insert(e.getKey(), e.getValue());
+		}
+		return toReturn;
+	}
+	
 }

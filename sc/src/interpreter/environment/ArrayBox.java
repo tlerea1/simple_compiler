@@ -21,9 +21,11 @@ public class ArrayBox extends Box {
 	public ArrayBox(int length, Type elem) {
 		this.length = length;
 		this.type = elem;
-		this.data = new Box[this.length];
-		for (int i=0;i<this.length;i++) {
-			this.data[i] = this.type.getBox();
+		if (length != -1) { // If Array if generically sized
+			this.data = new Box[this.length];
+			for (int i=0;i<this.length;i++) {
+				this.data[i] = this.type.getBox();
+			}
 		}
 	}
 	
