@@ -22,9 +22,10 @@ import parser.symbolTable.Array;
 import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.LocalVariable;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Variable;
+import parser.symbolTable.procedures.Len;
+import parser.symbolTable.procedures.Procedure;
 import util.Singleton;
 
 public class ImprovedCodeGen {
@@ -239,6 +240,8 @@ public class ImprovedCodeGen {
 			List<String> registers = this.pushRegisters();
 			this.out.println("call memcpy");
 			this.popRegisters(registers);
+			this.free(location);
+			this.free(exp);
 			return;
 		}
 
@@ -455,8 +458,16 @@ public class ImprovedCodeGen {
 	}
 
 	public Item visit(FunctionCall func) {
+		if (func.getProcedure() instanceof Len) { // Treat len() function differently
+			return new ConstantExpression(((Array) func.getActuals().get(0).getType()).getLength());
+		}
 		List<String> reg = this.pushRegisters();
 		for (int i=func.getActuals().size()-1;i>=0;i--) {
+			if (func.getActuals().get(i).getType() instanceof Array) {
+				((Array) ((parser.symbolTable.Variable) func.getProcedure().getScope()
+						.find(func.getProcedure().getFormals().get(i).getIdent())).getType())
+						.setCurrentLength(((Array) func.getActuals().get(i).getType()).getLength());
+			}
 			Item actual = this.visit(func.getActuals().get(i));
 			if (actual instanceof ConstantExpression) {
 				this.out.println("push " + this.compareHelper(actual));

@@ -1,4 +1,4 @@
-package parser.symbolTable;
+package parser.symbolTable.procedures;
 
 import interpreter.environment.Environment;
 
@@ -7,6 +7,9 @@ import java.util.List;
 import parser.Formal;
 import parser.ast.Expression;
 import parser.ast.Instruction;
+import parser.symbolTable.Entry;
+import parser.symbolTable.Scope;
+import parser.symbolTable.Type;
 import visitor.Visitor;
 
 public class Procedure extends Entry {

@@ -1,11 +1,12 @@
 PROGRAM typeTest;
 	VAR a : INTEGER;
 	VAR b : BOOLEAN;
-	VAR array : ARRAY 5 OF INTEGER;
+	VAR array : ARRAY 36 OF INTEGER;
+	
 	
 	PROCEDURE genArray(a : ARRAY OF INTEGER);
 		BEGIN
-		WRITE a[4]
+		WRITE len(a)
 	END genArray;
 		
 	BEGIN

@@ -6,9 +6,9 @@ import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
 import parser.symbolTable.LocalVariable;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
+import parser.symbolTable.procedures.Procedure;
 
 /**
  * Visitor interface. Used to create representations of the symbol table.

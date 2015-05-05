@@ -9,10 +9,10 @@ import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
 import parser.symbolTable.LocalVariable;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Variable;
+import parser.symbolTable.procedures.Procedure;
 
 /**
  * Class for GraphicalVisitor to create graphical DOT representation of the symbol table.

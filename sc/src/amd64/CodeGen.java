@@ -25,9 +25,9 @@ import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
 import parser.symbolTable.LocalVariable;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
+import parser.symbolTable.procedures.Procedure;
 import util.Singleton;
 import visitor.ASTVisitor;
 /**

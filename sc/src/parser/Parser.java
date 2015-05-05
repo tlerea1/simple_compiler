@@ -25,11 +25,12 @@ import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Integer;
 import parser.symbolTable.LocalVariable;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
 import parser.symbolTable.Variable;
+import parser.symbolTable.procedures.Len;
+import parser.symbolTable.procedures.Procedure;
 import scanner.Scanner;
 import scanner.Token;
 import scanner.TokenType;
@@ -81,7 +82,12 @@ public class Parser {
 		universe.insert("BOOLEAN", Singleton.getBool());
 		universe.insert("TRUE", new Constant(1, Singleton.getBool()));
 		universe.insert("FALSE", new Constant(0, Singleton.getBool()));
+		this.addBuiltInProcs(universe);
 		this.current = new Scope(universe);
+	}
+	
+	private void addBuiltInProcs(Scope uni) {
+		uni.insert("len", new Len());
 	}
 	
 	/**

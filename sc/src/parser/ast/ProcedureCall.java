@@ -2,8 +2,8 @@ package parser.ast;
 
 import java.util.List;
 
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Scope;
+import parser.symbolTable.procedures.Procedure;
 import visitor.ASTVisitor;
 
 public class ProcedureCall extends Instruction {

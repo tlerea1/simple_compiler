@@ -24,9 +24,10 @@ import parser.ast.Read;
 import parser.ast.Repeat;
 import parser.ast.Variable;
 import parser.ast.Write;
+import parser.symbolTable.Array;
 import parser.symbolTable.Constant;
-import parser.symbolTable.Procedure;
 import parser.symbolTable.Scope;
+import parser.symbolTable.procedures.Procedure;
 import util.Singleton;
 
 /**
@@ -144,6 +145,11 @@ public class Interpreter {
 	
 	private void fillEnvironment(Procedure p, Environment e, List<Expression> actuals) {
 		for (int i=0;i<actuals.size();i++) {
+			if (actuals.get(i).getType() instanceof Array) {
+				((Array) ((parser.symbolTable.Variable) p.getScope()
+						.find(p.getFormals().get(i).getIdent())).getType())
+						.setCurrentLength(((Array) actuals.get(i).getType()).getLength());
+			}
 			if (Singleton.isValueType(p.getFormals().get(i).getType())) {
 				IntegerBox b = (IntegerBox) e.get(p.getFormals().get(i).getIdent()); // Right now all value types are integer boxs
 				b.setValue((((Number) this.evaluate(actuals.get(i))).getNum().getValue()));
