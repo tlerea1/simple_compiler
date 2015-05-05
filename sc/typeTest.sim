@@ -11,7 +11,8 @@ PROGRAM typeTest;
 		
 	BEGIN
 
-	genArray(array)
+	genArray(array);
+	WRITE len(array)
 
 END typeTest.
 
