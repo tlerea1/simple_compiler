@@ -8,6 +8,7 @@ import interpreter.environment.RecordBox;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import parser.ast.Assign;
 import parser.ast.Binary;
@@ -124,20 +125,41 @@ public class Interpreter {
 	
 	private void Interpret(Read inst) { // Run read
 		IntegerBox box = (IntegerBox) evaluate(inst.getLoc());
-		if (this.stdin.hasNextInt()) {
-			box.setValue(this.stdin.nextInt());
+		if (inst.getLoc().getType().equals(Singleton.getChar())) {
+			if (this.stdin.hasNext(Pattern.compile(".{1}"))) {
+				String s = this.stdin.next(Pattern.compile(".{1}"));
+				if (s.length() != 1) {
+					throw new InterpreterException("Read more than one char");
+				}
+				box.setValue(s.charAt(0));
+			} else {
+				box.setValue(-1);
+			}
 		} else {
-			box.setValue(-1); // End of input
+			if (this.stdin.hasNextInt()) {
+				box.setValue(this.stdin.nextInt());
+			} else {
+				box.setValue(-1); // End of input
+			}
 		}
 	}
 	
 	private void Interpret(Write inst) {
 		Expression exp = evaluate(inst.getExp());
-		if (exp instanceof Location) { // If writing a variable
-			Box box = evaluate((Location) exp);
-			System.out.println(((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
-		} else { // If writing number
-			System.out.println(((Number) exp).getNum().getValue());
+		if (exp.getType().equals(Singleton.getChar())) {
+			if (exp instanceof Location) { // If writing a variable
+				Box box = evaluate((Location) exp);
+				System.out.println((char) ((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
+			} else { // If writing number
+				System.out.println((char) ((Number) exp).getNum().getValue());
+			}
+		} else {
+			if (exp instanceof Location) { // If writing a variable
+				Box box = evaluate((Location) exp);
+				System.out.println(((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
+			} else { // If writing number
+				System.out.println(((Number) exp).getNum().getValue());
+			}
 		}
 	}
 	

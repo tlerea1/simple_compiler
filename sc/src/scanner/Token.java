@@ -134,10 +134,13 @@ public class Token {
 			case EOF:
 				s += "eof";
 				break;
+			case CHARACTER:
+				s += "character";
+				break;
 			default:
 				throw new RuntimeException("error: Token: Printing default case token!");
 		}
-		if (this.type == TokenType.IDENTIFIER || this.type == TokenType.NUMBER) {
+		if (this.type == TokenType.IDENTIFIER || this.type == TokenType.NUMBER || this.type == TokenType.CHARACTER) {
 			s += "<" + this.text + ">";
 		}
 		s += "@(" + this.start + ", " + this.end + ")";

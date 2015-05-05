@@ -1,0 +1,11 @@
+PROGRAM char;
+
+	CONST a = 'a';
+	VAR c : CHAR;
+
+	BEGIN
+
+	c := 'c';
+	WRITE c
+END char.
+

@@ -19,6 +19,7 @@ import parser.ast.Read;
 import parser.ast.Repeat;
 import parser.ast.Write;
 import parser.symbolTable.Array;
+import parser.symbolTable.Char;
 import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.LocalVariable;
@@ -122,8 +123,12 @@ public class ImprovedCodeGen {
 		this.out.println(".string \"%s\"");
 		this.out.println("printf_num:");
 		this.out.println(".string \"%d\\n\"");
+		this.out.println("printf_char:");
+		this.out.println(".string \"%c\\n\"");
 		this.out.println("scanf_num:");
 		this.out.println(".string \"%d\"");
+		this.out.println("scanf_char:");
+		this.out.println(".string \"%c\"");
 		this.out.println("div_zero_mes:");
 		this.out.println(".string \"error: Division by Zero!\\n\"");
 		this.out.println("mod_zero_mes:");
@@ -346,15 +351,32 @@ public class ImprovedCodeGen {
 
 	private void visit(Read r) {
 		Item i = this.visit(r.getLoc());
-		if (i instanceof Address) {
-			this.out.println("movq " + ((Address) i).getRegister() + ", %rsi");
-		} else if (i instanceof ConstantOffset) {
-			this.out.println("leaq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rsi");
+		List<String> registers = null;
+		this.registers.use("%rax", null);
+		if (r.getLoc().getType() instanceof parser.symbolTable.Integer) {
+			if (i instanceof Address) {
+				this.out.println("movq " + ((Address) i).getRegister() + ", %rsi");
+			} else if (i instanceof ConstantOffset) {
+				this.out.println("leaq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rsi");
+			}
+			registers = this.pushRegisters();
+			if (r.getLoc().getType() instanceof parser.symbolTable.Integer) {
+				this.out.println("movl $scanf_num, %edi");
+			} else if (r.getLoc().getType() instanceof Char) {
+				this.out.println("movl $scanf_char, %edi");
+			}
+			this.out.println("movl $0, %eax");
+			this.out.println("call __isoc99_scanf");
+		} else if (r.getLoc().getType() instanceof Char) {
+			
+			registers = this.pushRegisters();
+			this.out.println("call getchar");
+			if (i instanceof Address) {
+				this.out.println("movq %rax, (" + ((Address) i).getRegister() + ")");
+			} else if (i instanceof ConstantOffset) {
+				this.out.println("movq %rax, " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + ")");
+			}
 		}
-		List<String> registers = this.pushRegisters();
-		this.out.println("movl $scanf_num, %edi");
-		this.out.println("movl $0, %eax");
-		this.out.println("call __isoc99_scanf");
 		this.out.println("cmpl $-1, %eax"); // If EOF, done
 		this.popRegisters(registers);
 		// Labels for different cmps
@@ -385,20 +407,37 @@ public class ImprovedCodeGen {
 
 	private void visit(Write w) {
 		Item i = this.visit(w.getExp());
-		if (i instanceof Address) {
-			this.out.println("movq (" + ((Address) i).getRegister() + "), %rsi");
-			this.registers.push(((Address) i).getRegister());
-		} else if (i instanceof ConstantExpression) {
-			this.out.println("movq $" + ((ConstantExpression) i).getValue() + ", %rsi");
-		} else if (i instanceof ExpressionValue) {
-			this.out.println("movq " + ((ExpressionValue) i).getRegister() + ", %rsi");
-			this.registers.push(((ExpressionValue) i).getRegister());
-		} else if (i instanceof ConstantOffset) {
-			this.out.println("movq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rsi");
+		if (w.getExp().getType() instanceof Char) {
+			if (i instanceof Address) {
+				this.out.println("movq (" + ((Address) i).getRegister() + "), %rdi");
+				this.registers.push(((Address) i).getRegister());
+			} else if (i instanceof ConstantExpression) {
+				this.out.println("movq $" + ((ConstantExpression) i).getValue() + ", %rdi");
+			} else if (i instanceof ExpressionValue) {
+				this.out.println("movq " + ((ExpressionValue) i).getRegister() + ", %rdi");
+				this.registers.push(((ExpressionValue) i).getRegister());
+			} else if (i instanceof ConstantOffset) {
+				this.out.println("movq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rdi");
+			}
+			this.out.println("call putchar");
+		} else if (w.getExp().getType() instanceof parser.symbolTable.Integer) {
+			if (i instanceof Address) {
+				this.out.println("movq (" + ((Address) i).getRegister() + "), %rsi");
+				this.registers.push(((Address) i).getRegister());
+			} else if (i instanceof ConstantExpression) {
+				this.out.println("movq $" + ((ConstantExpression) i).getValue() + ", %rsi");
+			} else if (i instanceof ExpressionValue) {
+				this.out.println("movq " + ((ExpressionValue) i).getRegister() + ", %rsi");
+				this.registers.push(((ExpressionValue) i).getRegister());
+			} else if (i instanceof ConstantOffset) {
+				this.out.println("movq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rsi");
+			}
+			if (w.getExp().getType() instanceof parser.symbolTable.Integer) {
+				this.out.println("movl $printf_num, %edi");
+			}
+			this.out.println("movl $0, %eax");
+			this.out.println("call printf");
 		}
-		this.out.println("movl $printf_num, %edi");
-		this.out.println("movl $0, %eax");
-		this.out.println("call printf");
 		this.free(i);
 //		this.registers.free();
 		
@@ -460,6 +499,8 @@ public class ImprovedCodeGen {
 	public Item visit(FunctionCall func) {
 		if (func.getProcedure() instanceof Len) { // Treat len() function differently
 			return new ConstantExpression(((Array) func.getActuals().get(0).getType()).getLength());
+		} else if (func.getProcedure() instanceof parser.symbolTable.procedures.Char) {
+			return this.visit(func.getActuals().get(0));
 		}
 		List<String> reg = this.pushRegisters();
 		for (int i=func.getActuals().size()-1;i>=0;i--) {

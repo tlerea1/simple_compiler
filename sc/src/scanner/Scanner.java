@@ -124,18 +124,33 @@ public class Scanner {
 			building.setEnd(this.file_position);
 			building.setText(tokenText);
 		} else if (isSymbol(c)) {
-			tokenText += (char) c;
-			int next = this.peak(); // Check the next character for a two character symbol
-			if (next != -1) { // If there is a next character
-				String test = tokenText;
-				test += (char) next;
-				if (isTwoSymbol(test)) { // Test the resulting two characters
-					tokenText += (char) this.nextChar(); // If is a two symbol add the nextChar
+			if (c == '\'') {
+				if (this.peak() != -1) { // next char exists
+					tokenText += (char) this.nextChar();
+					if (this.peak() != '\'') {
+						throw new ScannerException("Failed to close character quote");
+					}
+					this.nextChar(); // move past closing '
+					building.setType(TokenType.CHARACTER);
+					building.setEnd(this.file_position);
+					building.setText(tokenText);
+				} else {
+					throw new ScannerException("Cannot end with open quote");
 				}
+			} else {
+				tokenText += (char) c;
+				int next = this.peak(); // Check the next character for a two character symbol
+				if (next != -1) { // If there is a next character
+					String test = tokenText;
+					test += (char) next;
+					if (isTwoSymbol(test)) { // Test the resulting two characters
+						tokenText += (char) this.nextChar(); // If is a two symbol add the nextChar
+					}
+				}
+				building.setType(TokenType.SYMBOL); // Return type symbol
+				building.setEnd(this.file_position);
+				building.setText(tokenText);
 			}
-			building.setType(TokenType.SYMBOL); // Return type symbol
-			building.setEnd(this.file_position);
-			building.setText(tokenText);
 		} else {
 			throw new ScannerException("Invalid symbol found at position: " + this.file_position);
 		}
@@ -263,6 +278,7 @@ public class Scanner {
 		this.symbols.add('[');
 		this.symbols.add(']');
 		this.symbols.add(',');
+		this.symbols.add('\'');
 	}
 	
 	private void initTwoSymbols() { // Set of all the two character symbols

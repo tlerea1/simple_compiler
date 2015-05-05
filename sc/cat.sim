@@ -1,10 +1,10 @@
 PROGRAM Cat;
-VAR int: INTEGER;
+VAR int: CHAR;
 BEGIN
-	int := 0;
-	WHILE int # -1 DO
+	int := char(0);
+	WHILE int # char(-1) DO
 		READ int;
-		IF int # -1 THEN
+		IF int # char(-1) THEN
 			WRITE int
 		END
 	END

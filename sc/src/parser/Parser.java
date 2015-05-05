@@ -20,6 +20,7 @@ import parser.ast.Repeat;
 import parser.ast.Write;
 import parser.symbolTable.Array;
 import parser.symbolTable.Bool;
+import parser.symbolTable.Char;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
@@ -80,6 +81,7 @@ public class Parser {
 		this.singletonInt = Singleton.getInteger();
 		universe.insert("INTEGER", this.singletonInt);
 		universe.insert("BOOLEAN", Singleton.getBool());
+		universe.insert("CHAR", Singleton.getChar());
 		universe.insert("TRUE", new Constant(1, Singleton.getBool()));
 		universe.insert("FALSE", new Constant(0, Singleton.getBool()));
 		this.addBuiltInProcs(universe);
@@ -88,6 +90,7 @@ public class Parser {
 	
 	private void addBuiltInProcs(Scope uni) {
 		uni.insert("len", new Len());
+		uni.insert("char", new parser.symbolTable.procedures.Char());
 	}
 	
 	/**
@@ -511,8 +514,7 @@ public class Parser {
 		if (isRelOp(this.peak().getText())) {
 			String relOp = this.next().getText();
 			Expression right = this.simpleExpression();
-			if ((left.getType() instanceof Integer && right.getType() instanceof Integer) 
-					|| (left.getType() instanceof Bool && right.getType() instanceof Bool)) {
+			if (left.getType().equals(right.getType()) && Singleton.isValueType(left.getType())) {
 				return new RelBinary(left, right, relOp);
 			} else {
 				throw new ParserException("Cannot relate different types");
@@ -557,7 +559,8 @@ public class Parser {
 					throw new ParserException("ORing non-bools");
 				}
 			} else {
-				if (toReturn.getType() instanceof Integer && right.getType() instanceof Integer) {
+				if ((toReturn.getType() instanceof Integer && right.getType() instanceof Integer) 
+						|| (toReturn.getType() instanceof Char && right.getType() instanceof Char)) {
 					toReturn = new Binary(toReturn, right, op);
 				} else {
 					throw new ParserException("adding non-integer");
@@ -579,6 +582,9 @@ public class Parser {
 			String op = this.peak().getText();
 			this.obs.add(this.next());
 			Expression right = this.factor();
+			if ((toReturn.getType() instanceof Char || right.getType() instanceof Char)) {
+				throw new ParserException("Applying multiplicative operator to Character");
+			}
 			if (op.equals("AND")) {
 				if (toReturn.getType() instanceof Bool && right.getType() instanceof Bool) {
 					toReturn = new Binary(toReturn, right, op);
@@ -626,6 +632,9 @@ public class Parser {
 			} else {
 				throw new ParserException("NOTing non-bool");
 			}
+		} else if (peak.getType() == TokenType.CHARACTER) {
+			exp = new Number(new Constant(peak.getText().charAt(0), Singleton.getChar()));
+			this.obs.add(this.next());
 		} else {
 			error("Factor error: " + peak.getText(), peak.getStart());
 		}
@@ -854,7 +863,7 @@ public class Parser {
 		Expression exp = this.designator();
 		this.obs.accend();
 		if (exp instanceof Location) {
-			if (((Location) exp).getType() instanceof Integer) {
+			if (((Location) exp).getType() instanceof Integer || ((Location) exp).getType() instanceof Char) {
 				return new Read((Location) exp);
 			} else {
 				throw new ParserException("read: reading into non-integer variable");	
@@ -873,7 +882,7 @@ public class Parser {
 		this.hardMatch("WRITE");
 		Expression e = this.expression();
 		this.obs.accend();
-		if (isArithmeticable(e)) {
+		if (e.getType() instanceof Integer || e.getType() instanceof Char) {
 			return new Write(e);
 		} else {
 			throw new ParserException("write: writing non-integer");
