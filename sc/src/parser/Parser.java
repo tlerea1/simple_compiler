@@ -81,7 +81,7 @@ public class Parser {
 		this.singletonInt = Singleton.getInteger();
 		universe.insert("INTEGER", this.singletonInt);
 		universe.insert("BOOLEAN", Singleton.getBool());
-		universe.insert("CHAR", Singleton.getChar());
+		universe.insert("CHARACTER", Singleton.getChar());
 		universe.insert("TRUE", new Constant(1, Singleton.getBool()));
 		universe.insert("FALSE", new Constant(0, Singleton.getBool()));
 		this.addBuiltInProcs(universe);

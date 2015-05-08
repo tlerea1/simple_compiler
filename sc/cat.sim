@@ -1,5 +1,5 @@
 PROGRAM Cat;
-VAR int: CHAR;
+VAR int: CHARACTER;
 BEGIN
 	int := char(0);
 	WHILE int # char(-1) DO

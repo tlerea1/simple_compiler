@@ -1,7 +1,7 @@
 PROGRAM char;
 
-	CONST a = 'a';
-	VAR c : CHAR;
+	CONST a = '\n';
+	VAR c : CHARACTER;
 
 	BEGIN
 

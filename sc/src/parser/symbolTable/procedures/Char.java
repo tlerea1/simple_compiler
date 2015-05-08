@@ -34,7 +34,8 @@ public class Char extends Procedure {
 	}
 	
 	public Expression getRet() {
-		return new parser.ast.Variable("char", (Variable) super.getScope().find("int"));
+		FormalVariable f = (FormalVariable) super.getScope().find("int");
+		return new parser.ast.Variable("int", f);
 	}
 	
 	public Type getType() {

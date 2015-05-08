@@ -3,12 +3,21 @@ package util;
 import parser.symbolTable.Bool;
 import parser.symbolTable.Char;
 import parser.symbolTable.Integer;
+import parser.symbolTable.SimpleString;
 import parser.symbolTable.Type;
 
 public class Singleton {
 	private static Integer integer;
 	private static Bool bool;
 	private static Char character;
+	private static SimpleString string;
+	
+	public static SimpleString getString() {
+		if (string == null) {
+			string = new SimpleString();
+		}
+		return string;
+	}
 	
 	/**
 	 * Function to get the singleton instance of the Integer type

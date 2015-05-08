@@ -126,8 +126,9 @@ public class Interpreter {
 	private void Interpret(Read inst) { // Run read
 		IntegerBox box = (IntegerBox) evaluate(inst.getLoc());
 		if (inst.getLoc().getType().equals(Singleton.getChar())) {
-			if (this.stdin.hasNext(Pattern.compile(".{1}"))) {
-				String s = this.stdin.next(Pattern.compile(".{1}"));
+			this.stdin.useDelimiter("");
+			if (this.stdin.hasNext()) {
+				String s = this.stdin.next();
 				if (s.length() != 1) {
 					throw new InterpreterException("Read more than one char");
 				}
@@ -135,6 +136,7 @@ public class Interpreter {
 			} else {
 				box.setValue(-1);
 			}
+			this.stdin.reset();
 		} else {
 			if (this.stdin.hasNextInt()) {
 				box.setValue(this.stdin.nextInt());
@@ -149,9 +151,9 @@ public class Interpreter {
 		if (exp.getType().equals(Singleton.getChar())) {
 			if (exp instanceof Location) { // If writing a variable
 				Box box = evaluate((Location) exp);
-				System.out.println((char) ((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
+				System.out.print((char) ((IntegerBox) box).getValue()); // Must be integer. Leads me to believe this code is not needed
 			} else { // If writing number
-				System.out.println((char) ((Number) exp).getNum().getValue());
+				System.out.print((char) ((Number) exp).getNum().getValue());
 			}
 		} else {
 			if (exp instanceof Location) { // If writing a variable

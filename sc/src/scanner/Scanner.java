@@ -127,6 +127,14 @@ public class Scanner {
 			if (c == '\'') {
 				if (this.peak() != -1) { // next char exists
 					tokenText += (char) this.nextChar();
+					if (tokenText.charAt(0) == '\\') {
+						if (this.peak() != -1 && isSlashable(this.peak())) {
+							tokenText += (char) this.nextChar();
+							tokenText = this.escape(tokenText);
+						} else {
+							throw new ScannerException("Escaping non-escapable character in character literal");
+						}
+					}
 					if (this.peak() != '\'') {
 						throw new ScannerException("Failed to close character quote");
 					}
@@ -137,6 +145,27 @@ public class Scanner {
 				} else {
 					throw new ScannerException("Cannot end with open quote");
 				}
+			} else if (c == '\"') { 
+				String temp = "";
+				while (this.peak() != '\"') { // while next char isnt "
+					if (this.peak() == -1) {
+						throw new ScannerException("Failed to find close quote");
+					} else if (this.peak() == '\\') { 
+						temp += (char) this.nextChar();
+						if (isSlashable(this.peak())) {
+							temp += (char) this.nextChar();
+						} else {
+							throw new ScannerException("Cannot escape character in string literal");
+						}
+						tokenText += this.escape(temp);
+					} else {
+						tokenText += (char) this.nextChar();
+					}
+				}
+				this.nextChar(); // Runs close quote
+				building.setType(TokenType.STRING);
+				building.setEnd(this.file_position);
+				building.setText(tokenText);
 			} else {
 				tokenText += (char) c;
 				int next = this.peak(); // Check the next character for a two character symbol
@@ -219,6 +248,10 @@ public class Scanner {
 		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}
 	
+	private boolean isSlashable(int c) {
+		return (c == '\\' || c == 'n' || c == 't' || c == '0' || c == '\'' || c == '\"');
+	}
+	
 	private boolean isKeyword(String s) {
 		return keywords.contains(s);
 	}
@@ -279,6 +312,7 @@ public class Scanner {
 		this.symbols.add(']');
 		this.symbols.add(',');
 		this.symbols.add('\'');
+		this.symbols.add('\"');
 	}
 	
 	private void initTwoSymbols() { // Set of all the two character symbols
@@ -308,5 +342,24 @@ public class Scanner {
 		} catch(IOException e) {
 			throw new ScannerException("File Not Found");
 		}
+	}
+	
+	private String escape(String s) {
+		switch(s.charAt(1)) {
+			case 'n':
+				return "\n";
+			case 't':
+				return "\t";
+			case '\\':
+				return "\\";
+			case '0':
+				return "\0";
+			case '\'':
+				return "\'";
+			case '\"':
+				return "\"";
+				
+		}
+		return null;
 	}
 }
