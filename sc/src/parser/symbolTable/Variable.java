@@ -1,5 +1,6 @@
 package parser.symbolTable;
 
+import amd64.CodeGen;
 import visitor.Visitor;
 
 /**

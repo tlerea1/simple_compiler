@@ -41,7 +41,8 @@ public class Scope {
 	public Entry insert(String identifier, Entry value) {
 		if (value instanceof FormalVariable) {
 			this.formalOffset += CodeGen.SIZEOF_INT;
-			((FormalVariable) value).setLocation(this.formalOffset);
+			FormalVariable formalValue = (FormalVariable) value;
+			formalValue.setLocation(this.formalOffset);
 		} else if (value instanceof Field) {
 			((Field) value).setLocation(this.fieldOffset);
 			this.fieldOffset += ((Field) value).getType().size();

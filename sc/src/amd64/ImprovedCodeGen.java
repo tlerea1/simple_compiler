@@ -23,7 +23,9 @@ import parser.symbolTable.Char;
 import parser.symbolTable.Entry;
 import parser.symbolTable.FormalVariable;
 import parser.symbolTable.LocalVariable;
+import parser.symbolTable.Record;
 import parser.symbolTable.Scope;
+import parser.symbolTable.Type;
 import parser.symbolTable.Variable;
 import parser.symbolTable.procedures.Len;
 import parser.symbolTable.procedures.Procedure;
@@ -53,6 +55,7 @@ public class ImprovedCodeGen {
 		this.visit(this.st); // Handle declarations
 
 		this.genFunctions(); // Start of main
+		this.storeLength(this.st, 0);
 		if (this.ast != null) {
 			this.visit(this.ast); // Program instructions
 		}
@@ -78,6 +81,43 @@ public class ImprovedCodeGen {
 		this.out.println("call memset");
 		this.out.println("movq %rbp, %r15"); // r15 holds global bp
 		
+	}
+	
+	private void storeLength(Scope s, int offset) {
+		for (Map.Entry<String, Entry> e : s.getEntries()) {
+			if (e.getValue() instanceof parser.symbolTable.Variable) {
+				this.storeLength((Variable) e.getValue(), offset);
+			}
+		}
+	}
+	
+	private void storeLength(Variable v, int offset) {
+		if (v instanceof FormalVariable) {
+		
+		} else {
+			this.storeLength(v.getType(), v.getLocation() + offset);
+		}
+	}
+	
+	private void storeLength(Type t, int start) {
+		if (t instanceof Record) {
+			this.storeLength((Record) t, start);
+		} else if (t instanceof Array) {
+			this.storeLength((Array) t, start);
+		}
+	}
+	
+	private void storeLength(Record r, int start) {
+		this.storeLength(r.getScope(), start);
+	}
+	
+	private void storeLength(Array r, int start) {
+		this.out.println("movq $" + r.getLength() + ", " + start + "(%rbp)");
+		start += CodeGen.SIZEOF_INT;
+		for (int i=0;i<r.getLength();i++) {
+			this.storeLength(r.getElemType(), start);
+			start += r.getElemType().size();
+		}
 	}
 	
 	/*
@@ -156,6 +196,7 @@ public class ImprovedCodeGen {
 		this.out.println("movl $0, %esi");
 		this.out.println("movq %rsp, %rdi");
 		this.out.println("call memset"); // Allocate and zero space for locals
+		this.storeLength(p.getScope(), 0);
 		
 		if (p.getBody() != null) {
 			this.visit(p.getBody()); // Generate instructions
@@ -239,6 +280,11 @@ public class ImprovedCodeGen {
 			} else if (location instanceof ConstantOffset) {
 				this.out.println("leaq " + ((ConstantOffset) location).getOffset() + "(" + ((ConstantOffset) location).getRegister() + "), %rdi");
 			}
+			
+//			if (a.getLoc().getType() instanceof Array) {
+//				this.out.println("subq $" + CodeGen.SIZEOF_INT + ", %rsi");
+//				this.out.println("subq $" + CodeGen.SIZEOF_INT + ", %rdi");
+//			}
 			
 			this.registers.use("%rdx", null);
 			this.out.println("movq $" + a.getExp().getType().size() + ", %rdx");
@@ -410,12 +456,12 @@ public class ImprovedCodeGen {
 		if (w.getExp().getType() instanceof Char) {
 			if (i instanceof Address) {
 				this.out.println("movq (" + ((Address) i).getRegister() + "), %rdi");
-				this.registers.push(((Address) i).getRegister());
+//				this.registers.push(((Address) i).getRegister());
 			} else if (i instanceof ConstantExpression) {
 				this.out.println("movq $" + ((ConstantExpression) i).getValue() + ", %rdi");
 			} else if (i instanceof ExpressionValue) {
 				this.out.println("movq " + ((ExpressionValue) i).getRegister() + ", %rdi");
-				this.registers.push(((ExpressionValue) i).getRegister());
+//				this.registers.push(((ExpressionValue) i).getRegister());
 			} else if (i instanceof ConstantOffset) {
 				this.out.println("movq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rdi");
 			}
@@ -423,12 +469,12 @@ public class ImprovedCodeGen {
 		} else if (w.getExp().getType() instanceof parser.symbolTable.Integer) {
 			if (i instanceof Address) {
 				this.out.println("movq (" + ((Address) i).getRegister() + "), %rsi");
-				this.registers.push(((Address) i).getRegister());
+//				this.registers.push(((Address) i).getRegister());
 			} else if (i instanceof ConstantExpression) {
 				this.out.println("movq $" + ((ConstantExpression) i).getValue() + ", %rsi");
 			} else if (i instanceof ExpressionValue) {
 				this.out.println("movq " + ((ExpressionValue) i).getRegister() + ", %rsi");
-				this.registers.push(((ExpressionValue) i).getRegister());
+//				this.registers.push(((ExpressionValue) i).getRegister());
 			} else if (i instanceof ConstantOffset) {
 				this.out.println("movq " + ((ConstantOffset) i).getOffset() + "(" + ((ConstantOffset) i).getRegister() + "), %rsi");
 			}
@@ -498,7 +544,7 @@ public class ImprovedCodeGen {
 
 	public Item visit(FunctionCall func) {
 		if (func.getProcedure() instanceof Len) { // Treat len() function differently
-			return new ConstantExpression(((Array) func.getActuals().get(0).getType()).getLength());
+			return this.visit(func.getActuals().get(0));
 		} else if (func.getProcedure() instanceof parser.symbolTable.procedures.Char) {
 			return this.visit(func.getActuals().get(0));
 		}
@@ -1018,21 +1064,21 @@ public class ImprovedCodeGen {
 	public Item visit(Index i) {
 		Item index = this.visit(i.getExp());
 		Item location = this.visit(i.getLoc());
-		int arrayLength = ((Array) i.getLoc().getType()).getLength();
+		int arrayLength1 = ((Array) i.getLoc().getType()).getLength();
 		if (index instanceof ConstantExpression) {
 			int indexVal = ((ConstantExpression) index).getValue();
-			if (indexVal < 0 || indexVal >= arrayLength) {
+			if (indexVal < 0 || indexVal >= arrayLength1) {
 				throw new AMD64Exception("Index out of bounds exception");
 			}
 			if (location instanceof Address) {
+				indexVal += 1; // Offsets for the hidden length at array[0]
 				String reg = ((Address) location).getRegister();
 				int offset = ((ConstantExpression) index).getValue() * ((Array) i.getLoc().getType()).getElemType().size();
 				return new ConstantOffset(offset, reg);
 			} else if (location instanceof ConstantOffset) {
 				String reg = ((ConstantOffset) location).getRegister();
 				int offset = ((ConstantOffset) location).getOffset() 
-						+ ((ConstantExpression) index).getValue() 
-						* ((Array) i.getLoc().getType()).getElemType().size();
+						+ (indexVal * ((Array) i.getLoc().getType()).getElemType().size()) + CodeGen.SIZEOF_INT;
 				return new ConstantOffset(offset, reg);
 			} else {
 				throw new AMD64Exception("Index: unknown location item type");
@@ -1040,26 +1086,30 @@ public class ImprovedCodeGen {
 		} else if (index instanceof Address) {
 			if (location instanceof Address) {
 				String register = ((Address) index).getRegister();
-				this.out.println("movq (" + register + "), " + register); // Dereference address
-				this.out.println("cmpq $" + arrayLength + ", " + register);
-				this.out.println("jae array_out_of_bounds");
+				this.out.println("movq (" + register + "), " + register); // Dereference index
 				String locationRegister = ((Address) location).getRegister();
+				this.out.println("cmpq (" + locationRegister + "), " + register); // Use the stored array length
+				this.out.println("jae array_out_of_bounds");
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
 				this.out.println("addq " + register + ", " + locationRegister); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + locationRegister); // Offset for the length field
 				this.registers.push(register); // Free index register
 				return location; // Return adjusted address
 			} else if (location instanceof ConstantOffset) {
 				String register = ((Address) index).getRegister();
 				this.out.println("movq (" + register + "), " + register); // Dereference address
-				this.out.println("cmpq $" + arrayLength + ", " + register);
-				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
+				int locationOffset = ((ConstantOffset) location).getOffset();
+				this.out.println("cmpq " + this.compareHelper(location) + ", " + register);
+				this.out.println("jae array_out_of_bounds");
+				
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
 				String newReg = this.registers.pop();
-				this.out.println("leaq " + ((ConstantOffset) location).getOffset() + "(" + locationRegister + "), " + newReg);
+				this.out.println("leaq " + locationOffset + "(" + locationRegister + "), " + newReg);
 				this.out.println("addq " + newReg + ", " + register); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + register); // Offset for the length field
 				this.registers.push(newReg); // Free index register
 				return new Address(register); // Return address after applied indexing
 			} else {
@@ -1068,17 +1118,19 @@ public class ImprovedCodeGen {
 		} else if (index instanceof ExpressionValue) {
 			if (location instanceof Address) {
 				String register = ((ExpressionValue) index).getRegister();
-				this.out.println("cmpq $" + arrayLength + ", " + register);
-				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((Address) location).getRegister();
+
+				this.out.println("cmpq (" + locationRegister + "), " + register);
+				this.out.println("jae array_out_of_bounds");
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + register); // Shift to jump elements in array
 				this.out.println("addq " + register + ", " + locationRegister); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + locationRegister); // Offset for the length field
 				this.registers.push(register); // Free index register
 				return location; // Return adjusted address
 			} else if (location instanceof ConstantOffset) {
 				String register = ((ExpressionValue) index).getRegister();
-				this.out.println("cmpq $" + arrayLength + ", " + register);
+				this.out.println("cmpq " + this.compareHelper(location) + ", " + register);
 				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
@@ -1086,6 +1138,7 @@ public class ImprovedCodeGen {
 				String newReg = this.registers.pop();
 				this.out.println("leaq " + ((ConstantOffset) location).getOffset() + "(" + locationRegister + "), " + newReg);
 				this.out.println("addq " + newReg + ", " + register); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + register); // Offset for the length field
 				this.registers.push(newReg); // Free index register
 				return new Address(register); // Return address after applied indexing
 			} else {
@@ -1096,12 +1149,14 @@ public class ImprovedCodeGen {
 				String register = ((ConstantOffset) index).getRegister();
 				String newReg = this.registers.pop();
 				this.out.println("movq " + this.compareHelper(index) + ", " + newReg); // newReg holds index
-				this.out.println("cmpq $" + arrayLength + ", " + newReg);
+				this.out.println("cmpq " + this.compareHelper(location) + ", " + newReg);
 				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((Address) location).getRegister();
 				int size = (int) (Math.log(((Array) i.getLoc().getType()).getElemType().size()) / Math.log(2)); // Shift amount
 				this.out.println("sal $" + size + ", " + newReg); // Shift to jump elements in array
 				this.out.println("addq " + newReg + ", " + locationRegister); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + locationRegister); // Offset for the length field
+
 				this.registers.push(newReg); // Free index register
 				return location;
 			} else if (location instanceof ConstantOffset) {
@@ -1109,7 +1164,7 @@ public class ImprovedCodeGen {
 				int indexOffset = ((ConstantOffset) index).getOffset();
 				String newReg1 = this.registers.pop();
 				this.out.println("movq " + indexOffset + "(" + indexRegister + "), " + newReg1); // newReg1 holds index
-				this.out.println("cmpq $" + arrayLength + ", " + newReg1);
+				this.out.println("cmpq $" + this.compareHelper(location) + ", " + newReg1);
 				this.out.println("jae array_out_of_bounds");
 				String locationRegister = ((ConstantOffset) location).getRegister();
 				int locationOffset = ((ConstantOffset) location).getOffset();
@@ -1118,6 +1173,7 @@ public class ImprovedCodeGen {
 				String newReg2 = this.registers.pop();
 				this.out.println("leaq " + locationOffset + "(" + locationRegister + "), " + newReg2); // newReg2 holds address of location
 				this.out.println("addq " + newReg1 + ", " + newReg2); // add offset to original
+				this.out.println("addq $" + CodeGen.SIZEOF_INT + ", " + newReg2); // Offset for the length field
 				this.registers.push(newReg1); // Free Temp register
 				return new Address(newReg2); // Return address after applied indexing
 			} else {

@@ -106,7 +106,7 @@ public class RegisterAllocator {
 			throw new RuntimeException("Register Allocation: pushing non-register: " + reg);
 		}
 		if (!b && !(reg.equals("%rax") || reg.equals("%rdx"))) {
-			throw new RuntimeException("Register Allocation: pushing free register");
+			throw new RuntimeException("Register Allocation: pushing free register: " + reg);
 		} else {
 			this.registers.put(reg, false);
 		}

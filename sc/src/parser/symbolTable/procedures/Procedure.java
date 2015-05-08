@@ -3,13 +3,16 @@ package parser.symbolTable.procedures;
 import interpreter.environment.Environment;
 
 import java.util.List;
+import java.util.Map;
 
 import parser.Formal;
 import parser.ast.Expression;
 import parser.ast.Instruction;
 import parser.symbolTable.Entry;
+import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
+import parser.symbolTable.Variable;
 import visitor.Visitor;
 
 public class Procedure extends Entry {
@@ -93,9 +96,11 @@ public class Procedure extends Entry {
 	}
 	
 	public int size() {
-		int size = this.scope.size();
-		for (Formal f : this.formals) {
-			size -= f.getType().size();
+		int size = 0;
+		for (Map.Entry<String, Entry> e : this.scope.getEntries()) {
+			if (! (e.getValue() instanceof FormalVariable) && e.getValue() instanceof Variable) {
+				size += ((Variable) e.getValue()).size();
+			}
 		}
 		return size;
 	}

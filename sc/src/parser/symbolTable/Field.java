@@ -1,5 +1,6 @@
 package parser.symbolTable;
 
+import amd64.CodeGen;
 import visitor.ASTVisitor;
 
 public class Field extends Variable {
@@ -10,4 +11,5 @@ public class Field extends Variable {
 	public void accept(ASTVisitor v) {
 		v.visit(this);
 	}
+	
 }

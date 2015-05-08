@@ -1,5 +1,6 @@
 package parser.symbolTable;
 
+import amd64.CodeGen;
 import interpreter.environment.ArrayBox;
 import interpreter.environment.Box;
 import util.Singleton;
@@ -63,7 +64,7 @@ public class Array extends Type {
 	}
 	
 	public int size() {
-		return this.length * this.elemType.size();
+		return this.length * this.elemType.size() + CodeGen.SIZEOF_INT; // Extra length field
 	}
 	
 	public boolean equals(Object o) {
