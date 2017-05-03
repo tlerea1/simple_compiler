@@ -1,6 +1,8 @@
 package parser.ast;
 
+import amd64.Item;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public class Assign extends Instruction {
 	private Location loc;
@@ -32,6 +34,11 @@ public class Assign extends Instruction {
 	 * @param v the visitor to visit
 	 */
 	public int accept(ASTVisitor v) {
+		return v.visit(this);
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
 		return v.visit(this);
 	}
 }

@@ -2,10 +2,12 @@ package parser.ast;
 
 import java.util.List;
 
+import amd64.Item;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
 import parser.symbolTable.procedures.Procedure;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public class FunctionCall extends Expression {
 
@@ -68,6 +70,11 @@ public class FunctionCall extends Expression {
 	}
 	
 	public int accept(ASTVisitor v) {
+		return v.visit(this);
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
 		return v.visit(this);
 	}
 	

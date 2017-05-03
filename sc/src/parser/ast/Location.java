@@ -1,10 +1,12 @@
 package parser.ast;
 
+import amd64.Memory;
 import parser.symbolTable.Bool;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Type;
 import util.Singleton;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public abstract class Location extends Expression {
 	
@@ -33,4 +35,7 @@ public abstract class Location extends Expression {
 	public int accept(ASTVisitor v) {
 		return v.visit(this);
 	}
+	
+	public abstract Memory accept(CodeGenVisitor v);
+	
 }

@@ -1,8 +1,10 @@
 package parser.symbolTable;
 
 import amd64.CodeGen;
+import amd64.Item;
 import interpreter.environment.Box;
 import interpreter.environment.IntegerBox;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -35,5 +37,10 @@ public class Integer extends Type {
 	
 	public int size() {
 		return CodeGen.SIZEOF_INT;
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

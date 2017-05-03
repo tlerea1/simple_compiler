@@ -1,6 +1,8 @@
 package parser.symbolTable;
 
 import util.Singleton;
+import visitor.CodeGenVisitor;
+import amd64.Item;
 import interpreter.environment.Box;
 
 public class SimpleString extends Type {
@@ -20,6 +22,11 @@ public class SimpleString extends Type {
 	@Override
 	public int size() {
 		return this.scope.size();
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 
 }

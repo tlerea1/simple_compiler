@@ -1,6 +1,7 @@
 package parser.symbolTable;
 
-import amd64.CodeGen;
+import amd64.Memory;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -19,6 +20,11 @@ public class Variable extends Entry {
 	 */
 	public Variable(Type type) {
 		this.setType(type);
+	}
+	
+	public Variable(Type type, int offset) {
+		this.setType(type);
+		this.setLocation(offset);
 	}
 
 	/**
@@ -63,5 +69,10 @@ public class Variable extends Entry {
 
 	public void setLocation(int location) {
 		this.location = location;
+	}
+
+	@Override
+	public Memory accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

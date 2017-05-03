@@ -1,6 +1,8 @@
 package parser.ast;
 
+import amd64.Item;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public abstract class Node {
 	/**
@@ -11,4 +13,6 @@ public abstract class Node {
 	public int accept(ASTVisitor v) {
 		return v.visit(this);
 	}
+	
+	public abstract Item accept(CodeGenVisitor v);
 }

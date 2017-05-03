@@ -5,6 +5,7 @@ import interpreter.environment.Environment;
 import java.util.List;
 import java.util.Map;
 
+import amd64.Item;
 import parser.Formal;
 import parser.ast.Expression;
 import parser.ast.Instruction;
@@ -13,6 +14,7 @@ import parser.symbolTable.FormalVariable;
 import parser.symbolTable.Scope;
 import parser.symbolTable.Type;
 import parser.symbolTable.Variable;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 public class Procedure extends Entry {
@@ -103,6 +105,11 @@ public class Procedure extends Entry {
 			}
 		}
 		return size;
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 	
 }

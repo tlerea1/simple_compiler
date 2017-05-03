@@ -1,7 +1,9 @@
 package parser.symbolTable;
 
+import amd64.Item;
 import interpreter.environment.Box;
 import interpreter.environment.RecordBox;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -50,5 +52,10 @@ public class Record extends Type {
 	
 	public int size() {
 		return this.scope.size();
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

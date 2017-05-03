@@ -1,9 +1,11 @@
 package parser.symbolTable;
 
 import amd64.CodeGen;
+import amd64.Item;
 import interpreter.environment.ArrayBox;
 import interpreter.environment.Box;
 import util.Singleton;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -64,7 +66,7 @@ public class Array extends Type {
 	}
 	
 	public int size() {
-		return this.length * this.elemType.size() + CodeGen.SIZEOF_INT; // Extra length field
+		return this.length * this.elemType.size(); //TODO: removed length field
 	}
 	
 	public boolean equals(Object o) {
@@ -85,5 +87,10 @@ public class Array extends Type {
 	
 	public void setCurrentLength(int len) {
 		this.currentLength = len;
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

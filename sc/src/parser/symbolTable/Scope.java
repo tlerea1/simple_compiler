@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import amd64.CodeGen;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -113,6 +114,10 @@ public class Scope {
 	 * @param v the visitor to visit
 	 */
 	public void accept(Visitor v) {
+		v.visit(this);
+	}
+	
+	public void accept(CodeGenVisitor v) {
 		v.visit(this);
 	}
 	

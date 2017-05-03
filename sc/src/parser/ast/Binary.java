@@ -1,10 +1,12 @@
 package parser.ast;
 
+import amd64.Item;
 import parser.ParserException;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Integer;
 import parser.symbolTable.Type;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public class Binary extends Expression {
 	protected String operator;
@@ -98,5 +100,10 @@ public class Binary extends Expression {
 	@Override
 	public Expression getOpposite() {
 		throw new RuntimeException("Cannot get opposite of non-boolean binary");
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

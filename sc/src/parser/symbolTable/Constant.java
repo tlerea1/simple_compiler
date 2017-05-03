@@ -1,5 +1,7 @@
 package parser.symbolTable;
 
+import amd64.Item;
+import visitor.CodeGenVisitor;
 import visitor.Visitor;
 
 /**
@@ -67,5 +69,10 @@ public class Constant extends Entry {
 	 */
 	public void accept(Visitor v) {
 		v.visit(this);
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

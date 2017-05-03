@@ -1,10 +1,12 @@
 package parser.ast;
 
+import amd64.Item;
 import parser.symbolTable.Bool;
 import parser.symbolTable.Constant;
 import parser.symbolTable.Type;
 import util.Singleton;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public class Number extends Expression {
 	private Constant num;
@@ -46,5 +48,10 @@ public class Number extends Expression {
 		} else {
 			throw new RuntimeException("Cannot invert non-boolean");
 		}
+	}
+
+	@Override
+	public Item accept(CodeGenVisitor v) {
+		return v.visit(this);
 	}
 }

@@ -1,9 +1,11 @@
 package parser.ast;
 
+import amd64.Memory;
 import parser.ParserException;
 import parser.symbolTable.Record;
 import parser.symbolTable.Type;
 import visitor.ASTVisitor;
+import visitor.CodeGenVisitor;
 
 public class Field extends Location {
 	private Location loc;
@@ -45,6 +47,11 @@ public class Field extends Location {
 	 * @param v the visitor to visit
 	 */
 	public int accept(ASTVisitor v) {
+		return v.visit(this);
+	}
+
+	@Override
+	public Memory accept(CodeGenVisitor v) {
 		return v.visit(this);
 	}
 }
