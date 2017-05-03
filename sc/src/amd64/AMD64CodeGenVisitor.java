@@ -41,6 +41,7 @@ public class AMD64CodeGenVisitor implements CodeGenVisitor {
 
 	private PrintStream out;
 	private RegisterAllocator registers;
+	private int currentLabel;
 	
 	public AMD64CodeGenVisitor(PrintStream out) {
 		this.out = out;
@@ -170,15 +171,21 @@ public class AMD64CodeGenVisitor implements CodeGenVisitor {
 	}
 
 	@Override
-	public Memory visit(parser.ast.Field v) {
-		// TODO Auto-generated method stub
-		return null;
+	public Memory visit(parser.ast.Field f) {
+		Memory location = f.getLoc().accept(this);
+		int offset = f.getVar().getVar().getLocation();
+		
+		// Gets a new ConstantOffset that is just offset from the 
+		// original location
+		return location.offset(offset);
 	}
 
 	@Override
-	public Memory visit(Index v) {
-		// TODO Auto-generated method stub
-		return null;
+	public Memory visit(Index i) {
+		Memory location = i.getLoc().accept(this);
+		Item index = i.getExp().accept(this);
+		
+		return location.indexBy(index, this.registers, this.out, ((Array) i.getLoc().getType()).getElemType().size());
 	}
 
 	@Override
@@ -219,8 +226,35 @@ public class AMD64CodeGenVisitor implements CodeGenVisitor {
 	}
 
 	@Override
-	public Item visit(If v) {
-		// TODO Auto-generated method stub
+	public Item visit(If a) {
+		Item exp = a.getCondition().accept(this); // cmp done here
+		int current = ++this.currentLabel;
+		if (exp instanceof ConstantExpression) { // If condition is constant we can determine the outcome statically
+			if (((ConstantExpression) exp).getValue() != 1) { // If not true
+				if (a.getIfFalse() != null) { // If have false instructions
+					a.getIfFalse().accept(this);
+				}
+			} else { // If true
+				a.getIfTrue().accept(this); // Do true instructions
+			}
+			return null;
+		}
+		
+		this.out.println("cmp $1, " + exp); // compare the outcome to 1
+		exp.free(this.registers);
+		this.out.println("jne L" + current); // Jump if false
+
+		a.getIfTrue().accept(this);
+		
+		if (a.getIfFalse() != null) { // else segment
+			int current2 = ++this.currentLabel;
+			this.out.println("jmp L" + current2);
+			this.out.println("L" + current + ":");
+			a.getIfFalse().accept(this);
+			this.out.println("L" + current2 + ":");
+		} else {
+			this.out.println("L" + current + ":");
+		}
 		return null;
 	}
 
@@ -237,8 +271,20 @@ public class AMD64CodeGenVisitor implements CodeGenVisitor {
 	}
 
 	@Override
-	public Item visit(Repeat v) {
-		// TODO Auto-generated method stub
+	public Item visit(Repeat r) {
+		int current = ++this.currentLabel;
+		this.out.println("L" + current + ":"); // label to jmp to
+		r.getInstructions().accept(this); // Accept instructions 
+		Item exp = this.visit(r.getCondition()); // Do cmp
+		if (exp instanceof ConstantExpression) {
+			if (((ConstantExpression) exp).getValue() != 1) {
+				this.out.println("jmp L" + current);
+			}
+		} else {
+			this.out.println("cmpq $1, " + exp);
+			this.out.println("jne L" + current); // If not true, repeat
+		}
+		exp.free(this.registers);
 		return null;
 	}
 
